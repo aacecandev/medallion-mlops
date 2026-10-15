@@ -51,6 +51,16 @@ artifactRoot:
       keyOfAccessKeyId: AWS_ACCESS_KEY_ID
       keyOfSecretAccessKey: AWS_SECRET_ACCESS_KEY
 
+# MLflow 3.x ships a security middleware that rejects unknown Host headers
+# ("possible DNS rebinding attack", HTTP 403) and enforces CORS. The chart
+# only auto-derives allowed hosts from ingress, which is disabled here, so
+# requests to the in-cluster Service DNS and the LoadBalancer IP would be
+# refused. On a trusted LAN we allow all hosts/origins.
+serverAllowedHosts:
+  - "*"
+corsAllowedOrigins:
+  - "*"
+
 # Point the S3 client at the in-cluster RustFS endpoint instead of AWS.
 extraEnvVars:
   MLFLOW_S3_ENDPOINT_URL: http://rustfs-svc.rustfs.svc.cluster.local:9000
