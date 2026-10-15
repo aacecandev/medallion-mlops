@@ -30,6 +30,24 @@ proxy:
 # beyond the local network.
 
 singleuser:
+  # Custom image with the EDA/S3 libraries (pandas, pyarrow, s3fs, duckdb)
+  # baked in. Built from images/jupyter-singleuser/ and pushed to GHCR by
+  # .github/workflows/jupyter-singleuser.yml. Bump the tag when the image
+  # changes so ArgoCD rolls it. The GHCR package must be public (or add
+  # singleuser.image.pullSecrets) for the node to pull it.
+  image:
+    name: ghcr.io/aacecandev/medallion-mlops/jupyter-singleuser
+    tag: "0.1.0"
+  # Copy the starter notebooks (baked at /opt/examples) into each user's
+  # home on start. `cp -n` is copy-if-not-exists, so it never clobbers a
+  # user's own edits.
+  lifecycleHooks:
+    postStart:
+      exec:
+        command:
+          - sh
+          - -c
+          - "cp -n /opt/examples/*.ipynb /home/jovyan/ 2>/dev/null || true"
   networkPolicy:
     enabled: false
   # Expose the bronze bucket (endpoint + scoped access key) to the EDA
