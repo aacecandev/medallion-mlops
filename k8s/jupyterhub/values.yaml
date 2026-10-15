@@ -32,6 +32,32 @@ proxy:
 singleuser:
   networkPolicy:
     enabled: false
+  # Expose the bronze bucket (endpoint + scoped access key) to the EDA
+  # notebooks. Credentials come from the `rustfs-bronze-creds` Secret in
+  # this namespace, delivered as a SealedSecret (see k8s/rustfs/secrets/).
+  # Standard AWS_* env vars so pandas/DuckDB/boto3/s3fs pick them up:
+  #   s3fs.S3FileSystem(endpoint_url=os.environ["AWS_ENDPOINT_URL"])
+  extraEnv:
+    AWS_ACCESS_KEY_ID:
+      valueFrom:
+        secretKeyRef:
+          name: rustfs-bronze-creds
+          key: AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY:
+      valueFrom:
+        secretKeyRef:
+          name: rustfs-bronze-creds
+          key: AWS_SECRET_ACCESS_KEY
+    AWS_ENDPOINT_URL:
+      valueFrom:
+        secretKeyRef:
+          name: rustfs-bronze-creds
+          key: AWS_ENDPOINT_URL
+    BRONZE_BUCKET:
+      valueFrom:
+        secretKeyRef:
+          name: rustfs-bronze-creds
+          key: BUCKET
   storage:
     # k3s ships the local-path provisioner as the default StorageClass,
     # so per-user PVCs are provisioned on the node's disk.
