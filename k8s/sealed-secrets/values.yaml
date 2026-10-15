@@ -1,0 +1,8 @@
+# Sealed Secrets controller Helm values.
+# https://github.com/bitnami-labs/sealed-secrets
+#
+# fullnameOverride makes the controller Deployment/Service be named
+# `sealed-secrets-controller`, which is exactly what the `kubeseal` CLI
+# expects by default (--controller-name sealed-secrets-controller
+# --controller-namespace kube-system). No CLI flags needed to seal.
+fullnameOverride: sealed-secrets-controller
