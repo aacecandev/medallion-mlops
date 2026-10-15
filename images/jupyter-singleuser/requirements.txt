@@ -1,7 +1,8 @@
 # Pinned to match the Hub (jupyterhub-singleuser must match the hub major).
 jupyterhub==5.5.2
-# EDA + S3 access, baked in so notebooks don't need %pip install.
-pandas==3.0.6
-pyarrow==26.0.0
+# S3 access + EDA extras on top of the pyspark-notebook base (which
+# already ships Spark/PySpark, Java 21, pandas, pyarrow).
 s3fs==2026.9.0
 duckdb==1.5.6
+# Experiment tracking (local file store for now; MLflow server comes later).
+mlflow==3.17.1
