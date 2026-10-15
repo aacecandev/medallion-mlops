@@ -12,9 +12,16 @@ data:
     #!/bin/sh
     set -eu
 
+    # MinIO retired the dl.min.io binary path (HTTP 410) and gated the
+    # minio/mc image, so pull mc from the GitHub release with a pinned
+    # version + checksum. mc is MinIO-admin compatible and works against
+    # RustFS (verified: bucket + user/policy management).
     MC=/tmp/mc
-    echo "downloading mc client..."
-    wget -q -O "$MC" https://dl.min.io/client/mc/release/linux-amd64/mc
+    MC_URL="https://github.com/minio/mc/releases/download/RELEASE.2025-08-13T08-35-41Z/mc.linux-amd64.RELEASE.2025-08-13T08-35-41Z"
+    MC_SHA256="01f866e9c5f9b87c2b09116fa5d7c06695b106242d829a8bb32990c00312e891"
+    echo "downloading mc client (pinned)..."
+    wget -q -O "$MC" "$MC_URL"
+    echo "${MC_SHA256}  ${MC}" | sha256sum -c -
     chmod +x "$MC"
 
     EP="${RUSTFS_ENDPOINT:-http://rustfs-svc.rustfs.svc.cluster.local:9000}"
