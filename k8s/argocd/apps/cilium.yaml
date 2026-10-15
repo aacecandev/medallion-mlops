@@ -1,0 +1,36 @@
+# Cilium adoption. ArgoCD takes over the CNI that the mise
+# `network-install` task bootstrapped, using the SAME values file in this
+# repo (multi-source: $values points at the git repo).
+#
+# k8sServiceHost is pinned here because ArgoCD can't auto-detect it the
+# way the mise task does. Single-node homelab => the node IP is stable.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cilium
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://helm.cilium.io
+      chart: cilium
+      targetRevision: 1.19.5
+      helm:
+        valueFiles:
+          - $values/k8s/network/cilium-values.yaml
+        parameters:
+          - name: k8sServiceHost
+            value: "192.168.1.134"
+    - repoURL: https://github.com/aacecandev/medallion-mlops
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      # No prune on the CNI: never let ArgoCD garbage-collect networking.
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

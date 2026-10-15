@@ -1,0 +1,14 @@
+# ArgoCD helm values — https://github.com/argoproj/argo-helm
+#
+# Single-node homelab: expose the API/UI as a LoadBalancer Service so it
+# gets an IP from the Cilium lan-pool. `server.insecure` makes ArgoCD
+# serve plain HTTP (TLS is not terminated internally); reach it at
+# http://<lb-ip>.
+
+configs:
+  params:
+    server.insecure: true
+
+server:
+  service:
+    type: LoadBalancer

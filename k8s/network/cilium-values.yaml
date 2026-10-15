@@ -1,0 +1,25 @@
+# Cilium CNI — eBPF datapath, replaces kube-proxy + flannel.
+# https://docs.cilium.io/en/stable/
+#
+# NOTE: k8sServiceHost is NOT set here on purpose. k3s runs with
+# --disable-kube-proxy, so Cilium must know how to reach the API
+# server directly. The mise `network-install` task auto-detects the
+# control-plane InternalIP and injects it via `--set k8sServiceHost=...`.
+# When ArgoCD later adopts Cilium, pin that IP as a helm parameter in
+# the Application (single-node homelab => the IP is stable).
+
+kubeProxyReplacement: true
+k8sServicePort: 6443
+
+# L2 announcements for LoadBalancer Services on the LAN.
+l2announcements:
+  enabled: true
+
+# k3s mounts cgroup v2 at the host root.
+cgroup:
+  autoMount:
+    enabled: false
+  hostRoot: /sys/fs/cgroup
+
+operator:
+  replicas: 1

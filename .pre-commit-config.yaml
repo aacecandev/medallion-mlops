@@ -1,0 +1,13 @@
+# Pre-commit hooks. gitleaks runs as a local hook against the
+# mise-pinned binary (gitleaks = "8.30.1" in mise.toml), so the version
+# is reproducible and pre-commit never has to compile it with Go.
+#
+# Install once:  mise exec -- pre-commit install
+repos:
+  - repo: local
+    hooks:
+      - id: gitleaks
+        name: gitleaks (scan staged changes for secrets)
+        entry: gitleaks git --staged --redact --verbose
+        language: system
+        pass_filenames: false

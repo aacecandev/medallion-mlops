@@ -1,0 +1,25 @@
+# LoadBalancer IP pool + L2 announcement policy, managed by ArgoCD.
+# Points at k8s/network but only includes the CR manifest (the values
+# file in that directory is not a Kubernetes manifest).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cilium-lb
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/aacecandev/medallion-mlops
+    targetRevision: main
+    path: k8s/network
+    directory:
+      include: cilium-lb.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

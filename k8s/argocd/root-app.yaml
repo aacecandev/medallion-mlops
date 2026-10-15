@@ -1,0 +1,25 @@
+# App-of-apps root. ArgoCD watches k8s/argocd/apps/ in this repo and
+# manages every child Application it finds there. Add a new app by
+# dropping a manifest into that directory and committing.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/aacecandev/medallion-mlops
+    targetRevision: main
+    path: k8s/argocd/apps
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
