@@ -95,9 +95,50 @@ echo
 
 
 [tasks.k3s-uninstall]
-description = "Uninstall k3s and clean tofu state"
+description = "Uninstall k3s + deep-clean Cilium leftovers (interfaces, iptables, BPF)"
 run = """
-sudo /usr/local/bin/k3s-uninstall.sh
-rm -rf ~/.kube/configs/k3s.yaml
+# k3s-uninstall.sh stops k3s but does NOT clean Cilium's datapath. Stale
+# cilium_* interfaces, CILIUM/OLD_CILIUM iptables chains and pinned BPF
+# maps survive across reinstalls and break pod networking (ClusterIP and
+# egress time out). This task removes all of it for a truly clean slate.
+set +e
+
+[ -x /usr/local/bin/k3s-uninstall.sh ] && sudo /usr/local/bin/k3s-uninstall.sh
+
+# 1. Leftover datapath interfaces.
+for i in cilium_vxlan cilium_net cilium_host; do sudo ip link delete "$i" 2>/dev/null; done
+
+# 2. CILIUM + OLD_CILIUM iptables/ip6tables chains (handles quoted
+#    comments and chain-to-chain jumps that a naive grep -v breaks).
+sudo python3 - <<'PY'
+import subprocess, shlex
+run = lambda a: subprocess.run(a, capture_output=True, text=True)
+for ipt in ("iptables", "ip6tables"):
+    for t in ("raw", "mangle", "nat", "filter"):
+        for line in run([ipt, "-t", t, "-S"]).stdout.splitlines():
+            if line.startswith("-A") and "CILIUM" in line:
+                p = shlex.split(line)
+                tgt = p[p.index("-j")+1] if "-j" in p else (p[p.index("-g")+1] if "-g" in p else "")
+                if "CILIUM" in tgt:
+                    p[0] = "-D"; run([ipt, "-t", t] + p)
+        S = run([ipt, "-t", t, "-S"]).stdout.splitlines()
+        ch = [l.split()[1] for l in S if l.startswith("-N") and "CILIUM" in l.split()[1]]
+        for c in ch: run([ipt, "-t", t, "-F", c])
+        for c in ch: run([ipt, "-t", t, "-X", c])
+PY
+
+# 3. UFW rules opened by network-install for the cluster CIDRs.
+if command -v ufw >/dev/null; then
+  sudo ufw delete allow from 10.42.0.0/16 2>/dev/null
+  sudo ufw delete allow from 10.43.0.0/16 2>/dev/null
+fi
+
+# 4. Pinned BPF maps + leftover CNI/Cilium/k3s state.
+sudo rm -rf /sys/fs/bpf/cilium /sys/fs/bpf/tc/globals/cilium_* 2>/dev/null
+sudo rm -rf /etc/cni/net.d /opt/cni /var/lib/cni /var/lib/cilium /run/cilium \
+            /var/lib/rancher /etc/rancher 2>/dev/null
+rm -f ~/.kube/configs/k3s.yaml
+
+echo "Clean. Remaining cilium iptables rules: $(sudo iptables-save 2>/dev/null | grep -c CILIUM)"
 """
 
