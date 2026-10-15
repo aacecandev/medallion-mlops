@@ -140,6 +140,46 @@ checksum = "sha256:65a55ec56c24eab44383086166ec620a491952b7e23941a49ddca6e8a4c4b
 url = "https://github.com/k3s-io/k3s/releases/download/v1.36.2%2Bk3s1/k3s"
 url_api = "https://api.github.com/repos/k3s-io/k3s/releases/assets/457076797"
 
+[[tools.kubeseal]]
+version = "0.40.0"
+backend = "aqua:bitnami/sealed-secrets"
+specifiers = ["0.40.0"]
+
+[tools.kubeseal."platforms.linux-arm64"]
+checksum = "sha256:d82f01e9226d194ca7ebc13e3619edefd596b5b433582bcec3d5a8e8b1a03123"
+url = "https://github.com/bitnami/sealed-secrets/releases/download/v0.40.0/kubeseal-0.40.0-linux-arm64.tar.gz"
+url_api = "https://api.github.com/repos/bitnami/sealed-secrets/releases/assets/555346329"
+
+[tools.kubeseal."platforms.linux-arm64-musl"]
+checksum = "sha256:d82f01e9226d194ca7ebc13e3619edefd596b5b433582bcec3d5a8e8b1a03123"
+url = "https://github.com/bitnami/sealed-secrets/releases/download/v0.40.0/kubeseal-0.40.0-linux-arm64.tar.gz"
+url_api = "https://api.github.com/repos/bitnami/sealed-secrets/releases/assets/555346329"
+
+[tools.kubeseal."platforms.linux-x64"]
+checksum = "sha256:9314c35916646e9d59c8f06b1314574b4e79c4d76f079433607ed7b697bb5eb7"
+url = "https://github.com/bitnami/sealed-secrets/releases/download/v0.40.0/kubeseal-0.40.0-linux-amd64.tar.gz"
+url_api = "https://api.github.com/repos/bitnami/sealed-secrets/releases/assets/555346331"
+
+[tools.kubeseal."platforms.linux-x64-musl"]
+checksum = "sha256:9314c35916646e9d59c8f06b1314574b4e79c4d76f079433607ed7b697bb5eb7"
+url = "https://github.com/bitnami/sealed-secrets/releases/download/v0.40.0/kubeseal-0.40.0-linux-amd64.tar.gz"
+url_api = "https://api.github.com/repos/bitnami/sealed-secrets/releases/assets/555346331"
+
+[tools.kubeseal."platforms.macos-arm64"]
+checksum = "sha256:ec8a34b19ff8f1c1dee6fa09e13111b3007aa9ad08de1da28bd65cdc1eaecf93"
+url = "https://github.com/bitnami/sealed-secrets/releases/download/v0.40.0/kubeseal-0.40.0-darwin-arm64.tar.gz"
+url_api = "https://api.github.com/repos/bitnami/sealed-secrets/releases/assets/555346330"
+
+[tools.kubeseal."platforms.macos-x64"]
+checksum = "sha256:e165574e647029a562de2471caff444e06b33119f9546679e69492cdc3c6137f"
+url = "https://github.com/bitnami/sealed-secrets/releases/download/v0.40.0/kubeseal-0.40.0-darwin-amd64.tar.gz"
+url_api = "https://api.github.com/repos/bitnami/sealed-secrets/releases/assets/555346387"
+
+[tools.kubeseal."platforms.windows-x64"]
+checksum = "sha256:e43f3208b41709f69eea03059fcfe5688152543184ee0d7454f0e6d709466821"
+url = "https://github.com/bitnami/sealed-secrets/releases/download/v0.40.0/kubeseal-0.40.0-windows-amd64.tar.gz"
+url_api = "https://api.github.com/repos/bitnami/sealed-secrets/releases/assets/555346383"
+
 [[tools.pre-commit]]
 version = "4.7.0"
 backend = "aqua:pre-commit/pre-commit"

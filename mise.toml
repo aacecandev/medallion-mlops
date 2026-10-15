@@ -3,6 +3,7 @@ cilium-cli = "0.19.5"
 gitleaks = "8.30.1"
 helm = "3.16.4"
 k3s = "1.36.2+k3s1"
+kubeseal = "0.40.0"
 pre-commit = "4.7.0"
 
 [env]
@@ -141,4 +142,3 @@ rm -f ~/.kube/configs/k3s.yaml
 
 echo "Clean. Remaining cilium iptables rules: $(sudo iptables-save 2>/dev/null | grep -c CILIUM)"
 """
-
