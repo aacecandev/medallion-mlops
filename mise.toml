@@ -30,6 +30,16 @@ MASTER_IP="$(kubectl get nodes \
   -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')"
 echo "Detected control-plane InternalIP: ${MASTER_IP}"
 
+# UFW blocks pod->node traffic: pods reaching the API (ClusterIP ->
+# node:6443) arrive via lxc* on the INPUT chain and hit UFW's default
+# deny, so CoreDNS and others can never reach the API. Allow the pod and
+# service CIDRs. k3s defaults: pods 10.42.0.0/16, services 10.43.0.0/16.
+if command -v ufw >/dev/null && sudo ufw status | grep -q "Status: active"; then
+  sudo ufw allow from 10.42.0.0/16 comment 'k8s pod CIDR'
+  sudo ufw allow from 10.43.0.0/16 comment 'k8s service CIDR'
+  sudo ufw reload
+fi
+
 helm repo add cilium https://helm.cilium.io --force-update
 helm repo update cilium
 
