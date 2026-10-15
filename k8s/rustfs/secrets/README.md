@@ -12,7 +12,9 @@ encrypted `*-sealed.yaml` files live here — plaintext never touches git.
 | `rustfs-bronze-creds` | `rustfs` | Bronze bucket access key (consumed by the provisioning Job). |
 | `rustfs-silver-creds` | `rustfs` | Silver bucket access key. |
 | `rustfs-gold-creds` | `rustfs` | Gold bucket access key. |
+| `rustfs-mlflow-creds` | `rustfs` | MLflow bucket access key (consumed by the provisioning Job). |
 | `rustfs-bronze-creds` | `jupyterhub` | Bronze creds exposed to Jupyter for EDA. |
+| `rustfs-mlflow-creds` | `mlflow` | MLflow bucket creds for the MLflow server's artifact store. |
 
 Each per-bucket key is scoped by a bucket-only policy in RustFS, so the
 bronze key can only touch `bronze`, etc.

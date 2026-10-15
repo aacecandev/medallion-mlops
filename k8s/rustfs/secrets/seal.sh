@@ -51,15 +51,21 @@ seal_bucket() {
 BRONZE_SK="$(rand 24)"
 SILVER_SK="$(rand 24)"
 GOLD_SK="$(rand 24)"
+MLFLOW_SK="$(rand 24)"
 
-# rustfs namespace: all three, consumed by the provisioning Job.
+# rustfs namespace: all four, consumed by the provisioning Job.
 seal_bucket bronze rustfs rustfs-bronze-creds-sealed.yaml "$BRONZE_SK"
 seal_bucket silver rustfs rustfs-silver-creds-sealed.yaml "$SILVER_SK"
 seal_bucket gold   rustfs rustfs-gold-creds-sealed.yaml   "$GOLD_SK"
+seal_bucket mlflow rustfs rustfs-mlflow-creds-sealed.yaml "$MLFLOW_SK"
 
 # jupyterhub namespace: bronze only, for EDA. Same secret key as the
 # rustfs-ns bronze so the single RustFS user works from both namespaces.
 seal_bucket bronze jupyterhub rustfs-bronze-creds-jupyterhub-sealed.yaml "$BRONZE_SK"
+
+# mlflow namespace: the MLflow server's S3 artifact creds. Same secret key
+# as the rustfs-ns mlflow so the single RustFS user works from both.
+seal_bucket mlflow mlflow rustfs-mlflow-creds-mlflow-sealed.yaml "$MLFLOW_SK"
 
 echo
 echo "Done. Review and commit the *-sealed.yaml files."
