@@ -1,0 +1,39 @@
+# CloudNativePG — Kubernetes operator that manages PostgreSQL clusters
+# declaratively (HA, failover, backups, rolling upgrades). It only
+# installs the operator + CRDs here; the actual database is a `Cluster`
+# custom resource (see k8s/mlflow/postgres/, app `mlflow-postgres`).
+#
+# Multi-source: the chart comes from the CloudNativePG Helm repo and the
+# values come from this repo ($values), mirroring the other apps.
+# sync-wave 0 runs first so the operator + CRDs exist before any Cluster
+# CR is applied.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudnative-pg
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  sources:
+    - repoURL: https://cloudnative-pg.github.io/charts
+      chart: cloudnative-pg
+      targetRevision: 0.29.1
+      helm:
+        releaseName: cnpg
+        valueFiles:
+          - $values/k8s/cloudnative-pg/values.yaml
+    - repoURL: https://github.com/aacecandev/medallion-mlops
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cnpg-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

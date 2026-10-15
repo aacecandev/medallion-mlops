@@ -1,0 +1,42 @@
+# MLflow backend store — CloudNativePG PostgreSQL Cluster.
+#
+# Single instance: the homelab is single-node, so Postgres HA (multiple
+# replicas across nodes) would not actually survive a node loss. CNPG
+# still gives us declarative config, managed rolling upgrades, and a clean
+# backup story to grow into later.
+#
+# The initdb bootstrap creates the `mlflow` database owned by the `mlflow`
+# user, taking the password from the `mlflow-postgres` basic-auth Secret
+# (delivered as a SealedSecret, app `mlflow-secrets`). The operator exposes
+# a read-write Service at:
+#   mlflow-postgres-rw.mlflow.svc.cluster.local:5432
+# which is what the MLflow chart's backendStore.postgres.host points to.
+#
+# imageName is intentionally omitted: the operator pins a default
+# PostgreSQL image matching its own version (chart cloudnative-pg 0.29.1),
+# so the version is deterministic via the operator pin.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: mlflow-postgres
+  namespace: mlflow
+spec:
+  instances: 1
+
+  bootstrap:
+    initdb:
+      database: mlflow
+      owner: mlflow
+      secret:
+        name: mlflow-postgres
+
+  storage:
+    size: 5Gi
+    storageClass: local-path
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi

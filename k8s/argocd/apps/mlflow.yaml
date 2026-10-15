@@ -1,0 +1,41 @@
+# MLflow tracking server, managed by ArgoCD via the community-charts
+# Helm chart (image burakince/mlflow). Backend store is the CloudNativePG
+# Postgres (app `mlflow-postgres`); artifact store is the `mlflow` bucket
+# in RustFS, accessed in proxied mode so clients never need S3 creds.
+#
+# Multi-source: the chart comes from the community-charts Helm repo and
+# the values come from this repo ($values), mirroring the other apps.
+# sync-wave 3 runs after the Postgres Cluster (wave 2); the chart's own
+# db-connection-check init container waits for Postgres to be reachable,
+# and ArgoCD selfHeal reconciles until the RustFS `mlflow` bucket + creds
+# (provisioned under the rustfs apps) are ready.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mlflow
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  project: default
+  sources:
+    - repoURL: https://community-charts.github.io/helm-charts
+      chart: mlflow
+      targetRevision: 1.11.7
+      helm:
+        releaseName: mlflow
+        valueFiles:
+          - $values/k8s/mlflow/values.yaml
+    - repoURL: https://github.com/aacecandev/medallion-mlops
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mlflow
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

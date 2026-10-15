@@ -1,0 +1,33 @@
+# MLflow backend store — a dedicated PostgreSQL managed by CloudNativePG.
+# This app syncs the `Cluster` custom resource under k8s/mlflow/postgres/;
+# the CloudNativePG operator (app `cloudnative-pg`, wave 0) reconciles it
+# into a running Postgres with automated failover-ready tooling.
+#
+# Raw-manifest app (not Helm), mirroring rustfs-provisioning / tlc-ingest.
+# sync-wave 2 runs after the operator (wave 0) and the owner SealedSecret
+# (app `mlflow-secrets`, wave 1) so the CRD and the initdb owner Secret
+# both exist before the Cluster bootstraps.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mlflow-postgres
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/aacecandev/medallion-mlops
+    targetRevision: main
+    path: k8s/mlflow/postgres
+    directory:
+      recurse: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mlflow
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

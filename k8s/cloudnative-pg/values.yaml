@@ -1,0 +1,13 @@
+# CloudNativePG operator Helm values — https://cloudnative-pg.io
+#
+# Single-node homelab: one operator replica is enough. The operator is
+# lightweight; the PostgreSQL workloads it manages live in their own
+# namespaces (e.g. the `mlflow-postgres` Cluster in the mlflow namespace).
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 100Mi
+  limits:
+    memory: 200Mi
