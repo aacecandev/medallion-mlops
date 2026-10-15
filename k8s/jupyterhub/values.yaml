@@ -37,7 +37,7 @@ singleuser:
   # singleuser.image.pullSecrets) for the node to pull it.
   image:
     name: ghcr.io/aacecandev/medallion-mlops/jupyter-singleuser
-    tag: "0.3.0"
+    tag: "0.4.0"
   # Copy the starter notebooks (baked at /opt/examples) into each user's
   # home on start. `cp -n` is copy-if-not-exists, so it never clobbers a
   # user's own edits.
@@ -56,6 +56,11 @@ singleuser:
   # Standard AWS_* env vars so pandas/DuckDB/boto3/s3fs pick them up:
   #   s3fs.S3FileSystem(endpoint_url=os.environ["AWS_ENDPOINT_URL"])
   extraEnv:
+    # Point notebooks at the shared MLflow tracking server (mlflow namespace)
+    # so experiments are logged centrally instead of to a throwaway local
+    # ~/mlruns. Artifacts go through the server's proxied store into RustFS,
+    # so notebooks need no mlflow-bucket credentials.
+    MLFLOW_TRACKING_URI: http://mlflow.mlflow.svc.cluster.local
     AWS_ACCESS_KEY_ID:
       valueFrom:
         secretKeyRef:
