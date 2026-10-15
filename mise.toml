@@ -142,3 +142,35 @@ rm -f ~/.kube/configs/k3s.yaml
 
 echo "Clean. Remaining cilium iptables rules: $(sudo iptables-save 2>/dev/null | grep -c CILIUM)"
 """
+
+[tasks.ghcr-make-public]
+description = "Make the jupyter-singleuser GHCR package public (GitHub has no API for this; opens the settings page)"
+run = """
+set -euo pipefail
+
+OWNER="aacecandev"
+PKG="jupyter-singleuser"
+
+# gh/REST exposes no endpoint to change package visibility (PATCH
+# .../visibility returns 404), so it is a manual UI toggle. We use gh for
+# what it CAN do — confirm the package exists and report its visibility —
+# then open the exact settings page.
+if gh api "/user/packages/container/${PKG}" >/dev/null 2>&1; then
+  vis="$(gh api "/user/packages/container/${PKG}" -q .visibility)"
+  echo "Package '${PKG}' current visibility: ${vis}"
+  if [ "${vis}" = "public" ]; then
+    echo "Already public — nothing to do."
+    exit 0
+  fi
+else
+  echo "Package '${PKG}' not found yet. Run the build workflow first:"
+  echo "  gh workflow run build-jupyter-singleuser"
+fi
+
+URL="https://github.com/users/${OWNER}/packages/container/${PKG}/settings"
+echo
+echo "GitHub has no API to change package visibility — do it in the UI:"
+echo "  Danger Zone -> Change visibility -> Public"
+echo "  ${URL}"
+command -v xdg-open >/dev/null && xdg-open "${URL}" >/dev/null 2>&1 || true
+"""
