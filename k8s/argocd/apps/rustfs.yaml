@@ -1,0 +1,39 @@
+# RustFS — S3-compatible object store for the medallion lakehouse.
+# Standalone mode (single pod, single PVC) fits the single-node homelab.
+# Multi-source: the chart comes from the RustFS Helm repo and the values
+# come from this repo ($values), mirroring the other apps.
+#
+# Root credentials are NOT in this chart: the chart references an
+# existing Secret (`rustfs-root`) that is delivered as an encrypted
+# SealedSecret (see k8s/rustfs/secrets/). sync-wave 2 runs after the
+# SealedSecrets (wave 1) so the root Secret exists before the pod starts.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rustfs
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.rustfs.com
+      chart: rustfs
+      targetRevision: 1.0.1
+      helm:
+        releaseName: rustfs
+        valueFiles:
+          - $values/k8s/rustfs/values.yaml
+    - repoURL: https://github.com/aacecandev/medallion-mlops
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: rustfs
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
