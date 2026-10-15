@@ -1,0 +1,29 @@
+# NYC TLC ingest — downloads a fixed monthly sample into the bronze
+# bucket. First slice of the data pipeline: uses a stock image (no custom
+# image or registry yet) and the bronze-scoped access key.
+# sync-wave 4 runs after RustFS provisioning (wave 3) so the bucket and
+# the rustfs-bronze-creds Secret already exist.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tlc-ingest
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/aacecandev/medallion-mlops
+    targetRevision: main
+    path: k8s/tlc-ingest
+    directory:
+      recurse: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: rustfs
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

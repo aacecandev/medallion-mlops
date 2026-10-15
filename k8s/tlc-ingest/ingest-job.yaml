@@ -1,0 +1,85 @@
+# Downloads a fixed NYC TLC monthly sample and lands it in the bronze
+# bucket. One-shot by design, but modelled as an ArgoCD Sync hook so it
+# runs on sync and is recreated cleanly; the script is idempotent (skips
+# the download if the object is already in bronze), so repeated syncs are
+# cheap. Uses the bronze-scoped access key (rustfs-bronze-creds).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tlc-ingest-script
+  namespace: rustfs
+data:
+  ingest.sh: |
+    #!/bin/sh
+    set -eu
+
+    # Pinned mc (MinIO retired dl.min.io; minio/mc image is gated).
+    MC=/tmp/mc
+    MC_URL="https://github.com/minio/mc/releases/download/RELEASE.2025-08-13T08-35-41Z/mc.linux-amd64.RELEASE.2025-08-13T08-35-41Z"
+    MC_SHA256="01f866e9c5f9b87c2b09116fa5d7c06695b106242d829a8bb32990c00312e891"
+    echo "downloading mc client (pinned)..."
+    wget -q -O "$MC" "$MC_URL"
+    echo "${MC_SHA256}  ${MC}" | sha256sum -c -
+    chmod +x "$MC"
+
+    DATASET="${TLC_DATASET:-yellow_tripdata}"
+    MONTH="${TLC_MONTH:-2024-01}"
+    FILE="${DATASET}_${MONTH}.parquet"
+    SRC="https://d37ci6vzurychx.cloudfront.net/trip-data/${FILE}"
+    DEST="rt/${BUCKET}/${DATASET}/${FILE}"
+
+    "$MC" alias set rt "$AWS_ENDPOINT_URL" "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY"
+
+    if "$MC" stat "$DEST" >/dev/null 2>&1; then
+      echo "already present: ${DEST} — skipping download."
+      exit 0
+    fi
+
+    echo "downloading ${SRC} ..."
+    wget -q -O "/tmp/${FILE}" "$SRC"
+    # sanity: parquet files start with the magic bytes "PAR1"
+    if [ "$(head -c 4 /tmp/${FILE})" != "PAR1" ]; then
+      echo "ERROR: downloaded file is not a valid parquet (missing PAR1 magic)"
+      exit 1
+    fi
+
+    echo "uploading to ${DEST} ..."
+    "$MC" cp "/tmp/${FILE}" "$DEST"
+    echo "done: ${FILE} landed in bronze."
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tlc-ingest
+  namespace: rustfs
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 5
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app: tlc-ingest
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: ingest
+          image: alpine:3.20
+          command: ["/bin/sh", "/scripts/ingest.sh"]
+          env:
+            - name: TLC_DATASET
+              value: yellow_tripdata
+            - name: TLC_MONTH
+              value: "2024-01"
+          envFrom:
+            - secretRef:
+                name: rustfs-bronze-creds
+          volumeMounts:
+            - name: script
+              mountPath: /scripts
+      volumes:
+        - name: script
+          configMap:
+            name: tlc-ingest-script
