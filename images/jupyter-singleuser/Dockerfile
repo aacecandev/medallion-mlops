@@ -5,15 +5,19 @@
 FROM quay.io/jupyter/pyspark-notebook:spark-4.2.0
 
 # S3A support for Spark. The bundled Spark has NO aws/s3a jars, so we add
-# them. hadoop-aws MUST match the bundled Hadoop (3.5.0), and hadoop-aws
-# 3.5.0 depends on the AWS SDK v2 bundle 2.35.4 (resolved from the Hadoop
-# parent POM property aws-java-sdk-v2.version). Baked in for reproducible,
-# offline-at-runtime S3 access (no Ivy download on each spawn).
+# them. hadoop-aws MUST match the bundled Hadoop (3.5.0), which pulls:
+#   - AWS SDK v2 bundle 2.35.4            (aws-java-sdk-v2.version)
+#   - analyticsaccelerator-s3 1.3.1       (amazon-s3-analyticsaccelerator-s3.version)
+# Hadoop 3.5.0 references the analytics-accelerator classes unconditionally
+# (stream factory AND the request-audit path), so that jar is required even
+# when we force the classic input stream. Versions resolved from the Hadoop
+# parent POM; baked in for reproducible, offline-at-runtime S3 access.
 USER root
 RUN cd "${SPARK_HOME}/jars" && \
     curl -fsSLO https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.5.0/hadoop-aws-3.5.0.jar && \
     curl -fsSLO https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/2.35.4/bundle-2.35.4.jar && \
-    chown "${NB_UID}:${NB_GID}" hadoop-aws-3.5.0.jar bundle-2.35.4.jar
+    curl -fsSLO https://repo1.maven.org/maven2/software/amazon/s3/analyticsaccelerator/analyticsaccelerator-s3/1.3.1/analyticsaccelerator-s3-1.3.1.jar && \
+    chown "${NB_UID}:${NB_GID}" hadoop-aws-3.5.0.jar bundle-2.35.4.jar analyticsaccelerator-s3-1.3.1.jar
 USER ${NB_UID}
 
 # S3 + EDA + MLflow Python libs.
