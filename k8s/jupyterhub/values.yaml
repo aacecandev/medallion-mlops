@@ -63,5 +63,9 @@ singleuser:
     # so per-user PVCs are provisioned on the node's disk.
     capacity: 2Gi
   memory:
-    guarantee: 512M
-    limit: 1G
+    # EDA loads a full month of TLC data into memory. A ~50MB Parquet
+    # expands to ~500-800MB in pandas, and the pyarrow->pandas conversion
+    # transiently doubles it, so 1Gi OOMKills the kernel. 4Gi gives room
+    # to load + transform; lower this if the node is RAM-constrained.
+    guarantee: 1G
+    limit: 4G
