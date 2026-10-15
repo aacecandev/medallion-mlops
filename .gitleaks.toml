@@ -1,0 +1,17 @@
+# gitleaks configuration.
+# Extends the built-in ruleset (keeps all default secret detection) and
+# allowlists Sealed Secrets ciphertext: *-sealed.yaml files contain only
+# RSA-encrypted data (kind: SealedSecret / encryptedData), which is safe
+# to commit by design. They trip the high-entropy generic-api-key rule,
+# so we exclude those paths — real plaintext secrets elsewhere are still
+# caught.
+title = "medallion-mlops"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Sealed Secrets ciphertext is encrypted and safe to commit"
+paths = [
+  '''k8s/rustfs/secrets/.*-sealed\.yaml$''',
+]
