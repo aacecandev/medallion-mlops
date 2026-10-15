@@ -1,0 +1,62 @@
+# MLflow Helm values — https://github.com/community-charts/helm-charts
+#
+# Backend store: the dedicated CloudNativePG Postgres (app
+# `mlflow-postgres`). Artifact store: the `mlflow` bucket in RustFS,
+# reached over the in-cluster S3 endpoint. Both the bundled Bitnami
+# Postgres subchart and the bundled MinIO subchart are DISABLED — we use
+# our own Postgres and our own object store.
+#
+# Exposed as a LoadBalancer Service so the UI/API get a Cilium lan-pool IP
+# on the LAN, mirroring RustFS. Internal workloads reach MLflow at
+# http://mlflow.mlflow.svc.cluster.local.
+
+replicaCount: 1
+
+service:
+  type: LoadBalancer
+  port: 80
+
+# --- Backend store: CloudNativePG Postgres ---------------------------------
+backendStore:
+  # Run the Alembic DB migration on startup so the schema is created/upgraded.
+  databaseMigration: true
+  # Init container that blocks until Postgres is reachable (it comes up in
+  # its own app, so MLflow may start first on a cold cluster).
+  databaseConnectionCheck: true
+  postgres:
+    enabled: true
+    host: mlflow-postgres-rw.mlflow.svc.cluster.local
+    port: 5432
+    database: mlflow
+    driver: psycopg2
+  # User + password come from the same SealedSecret that bootstraps the
+  # CNPG Cluster owner (username=mlflow). Single source of truth.
+  existingDatabaseSecret:
+    name: mlflow-postgres
+    usernameKey: username
+    passwordKey: password
+
+# --- Artifact store: RustFS (S3-compatible) --------------------------------
+artifactRoot:
+  # Proxied mode: the MLflow server streams artifacts to/from S3 on behalf
+  # of clients, so experiment code never needs the bucket credentials.
+  proxiedArtifactStorage: true
+  s3:
+    enabled: true
+    bucket: mlflow
+    # Scoped bucket key, sealed in k8s/rustfs/secrets/ and provisioned by
+    # the RustFS provisioning Job (user `mlflow`, policy `mlflow-rw`).
+    existingSecret:
+      name: rustfs-mlflow-creds
+      keyOfAccessKeyId: AWS_ACCESS_KEY_ID
+      keyOfSecretAccessKey: AWS_SECRET_ACCESS_KEY
+
+# Point the S3 client at the in-cluster RustFS endpoint instead of AWS.
+extraEnvVars:
+  MLFLOW_S3_ENDPOINT_URL: http://rustfs-svc.rustfs.svc.cluster.local:9000
+
+# --- Disable bundled subcharts (we bring our own) --------------------------
+postgresql:
+  enabled: false
+minio:
+  enabled: false

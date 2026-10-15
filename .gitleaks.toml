@@ -13,5 +13,5 @@ useDefault = true
 [allowlist]
 description = "Sealed Secrets ciphertext is encrypted and safe to commit"
 paths = [
-  '''k8s/rustfs/secrets/.*-sealed\.yaml$''',
+  '''k8s/.*/secrets/.*-sealed\.yaml$''',
 ]
