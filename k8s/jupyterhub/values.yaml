@@ -37,7 +37,7 @@ singleuser:
   # singleuser.image.pullSecrets) for the node to pull it.
   image:
     name: ghcr.io/aacecandev/medallion-mlops/jupyter-singleuser
-    tag: "0.1.0"
+    tag: "0.2.0"
   # Copy the starter notebooks (baked at /opt/examples) into each user's
   # home on start. `cp -n` is copy-if-not-exists, so it never clobbers a
   # user's own edits.
@@ -81,9 +81,8 @@ singleuser:
     # so per-user PVCs are provisioned on the node's disk.
     capacity: 2Gi
   memory:
-    # EDA loads a full month of TLC data into memory. A ~50MB Parquet
-    # expands to ~500-800MB in pandas, and the pyarrow->pandas conversion
-    # transiently doubles it, so 1Gi OOMKills the kernel. 4Gi gives room
-    # to load + transform; lower this if the node is RAM-constrained.
-    guarantee: 1G
-    limit: 4G
+    # Local-mode Spark (JVM driver, spark.driver.memory=4g) plus the
+    # notebook kernel needs real headroom. The node has 64GB, so 8Gi per
+    # server is comfortable; raise spark.driver.memory accordingly.
+    guarantee: 2G
+    limit: 8G
