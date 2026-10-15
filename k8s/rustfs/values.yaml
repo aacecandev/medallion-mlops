@@ -1,0 +1,40 @@
+# RustFS Helm values — https://docs.rustfs.com
+#
+# Single-node homelab: standalone mode (one pod, one data PVC) on the
+# k3s `local-path` provisioner. The S3 endpoint (:9000) and console
+# (:9001) are exposed as a LoadBalancer Service so they get an IP from
+# the Cilium lan-pool and are reachable on the LAN. Internal workloads
+# (the provisioning Job, Spark, Feast, Jupyter) reach the endpoint at
+# http://rustfs-svc.rustfs.svc.cluster.local:9000.
+
+mode:
+  standalone:
+    enabled: true
+  distributed:
+    enabled: false
+
+replicaCount: 1
+drivesPerNode: 1
+
+# Root credentials come from an existing Secret delivered as a
+# SealedSecret (k8s/rustfs/secrets/). The chart expects the keys
+# RUSTFS_ACCESS_KEY and RUSTFS_SECRET_KEY inside it.
+secret:
+  existingSecret: rustfs-root
+
+service:
+  type: LoadBalancer
+  endpoint:
+    port: 9000
+  console:
+    port: 9001
+
+# The chart's Ingress defaults to nginx with example hostnames; we use a
+# LoadBalancer Service on the LAN instead, so disable it.
+ingress:
+  enabled: false
+
+storageclass:
+  name: local-path
+  dataStorageSize: 20Gi
+  logStorageSize: 1Gi
