@@ -1,15 +1,60 @@
 # medallion-mlops
 
-A single-node **k3s homelab** that bootstraps itself from bare metal and then
-runs on **GitOps**. A short set of imperative [`mise`](https://mise.jdx.dev)
-tasks stands the cluster up (k3s → Cilium → ArgoCD); after that, ArgoCD
-reconciles everything from the manifests in `k8s/`.
+A self-hosted, end-to-end **MLOps lab** built on a single-node **k3s homelab**
+and driven entirely by **GitOps**. The goal is to take raw **NYC Taxi &
+Limousine Commission (TLC)** trip data through a full **medallion architecture**
+(bronze → silver → gold) and all the way to a monitored, online model-serving
+pipeline — every component self-hosted and reconciled from this repository.
 
-- **k3s** with kube-proxy and flannel disabled — Cilium owns the datapath.
-- **Cilium** (eBPF) as CNI + LoadBalancer with L2 announcements.
-- **ArgoCD** app-of-apps as the GitOps control plane.
+## The goal
 
-Full details and the diagram live in [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
+```
+TLC trip data ──▶ Jupyter (EDA) ──▶ PySpark ETL
+                                         │
+        ┌────────────── RustFS (S3-compatible) ──────────────┐
+        │   Bronze ──▶ Silver ──▶ Gold (features per zone)    │
+        └────────────────────────┬────────────────────────────┘
+                                  ▼
+          MLflow ◀── Training ◀── Feast (offline + registry)
+            │                        │
+            ▼                        ▼
+      KServe / MLServer ◀────────  Redis (online store) ──▶ Monitoring
+                                                            (Evidently + Grafana)
+
+        Orchestration: Argo Workflows + ArgoCD
+        ETL → materialize → train → register, deployed by GitOps
+```
+
+The full target pipeline is in [`docs/target-pipeline.excalidraw`](./docs/target-pipeline.excalidraw)
+and described in [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
+
+### Target stack
+
+| Stage | Component |
+| --- | --- |
+| Data source | NYC TLC trip data (monthly Parquet) |
+| Exploration | Jupyter (JupyterHub) — pandas / DuckDB |
+| ETL | PySpark — cleaning + feature engineering |
+| Storage | RustFS (S3-compatible), medallion bronze/silver/gold |
+| Feature store | Feast — offline + registry, Redis online store |
+| Training | Point-in-time join → model training |
+| Experiment tracking | MLflow — tracking + model registry |
+| Serving | KServe / MLServer — online inference |
+| Monitoring | Evidently + Grafana |
+| Orchestration | Argo Workflows (pipelines) + ArgoCD (GitOps) |
+
+## Current status
+
+This repo is being built bottom-up. The **infrastructure foundation and GitOps
+control plane are in place**; the data/ML pipeline on top is the roadmap.
+
+- ✅ **k3s** with kube-proxy and flannel disabled — Cilium owns the datapath.
+- ✅ **Cilium** (eBPF) as CNI + LoadBalancer with L2 announcements.
+- ✅ **ArgoCD** app-of-apps as the GitOps control plane.
+- ✅ **JupyterHub** for the exploration/EDA stage.
+- 🔲 RustFS object storage + medallion layers.
+- 🔲 PySpark ETL, Feast, MLflow, KServe, Evidently/Grafana.
+- 🔲 Argo Workflows pipelines.
 
 ## Quick start
 
@@ -28,4 +73,9 @@ mise run k3s-uninstall
 
 ## Why "medallion"?
 
-The name is a double entendre. In New York City, a *medallion* is the official license that authorizes the city's iconic yellow taxis. It's also the name of the **medallion architecture** — the bronze/silver/gold layering pattern used to progressively refine data in a lakehouse. This repo leans on that same pattern, so the name nods to both: a licensed, structured flow of data through bronze, silver, and gold tiers.
+The name is a double entendre, and in this project both meanings are literal. In
+New York City, a *medallion* is the official license that authorizes the city's
+iconic yellow taxis — the very fleet whose **TLC trip data** feeds this pipeline.
+It's also the name of the **medallion architecture** — the bronze/silver/gold
+layering pattern used to progressively refine data in a lakehouse, which is
+exactly how that taxi data flows through the lab.

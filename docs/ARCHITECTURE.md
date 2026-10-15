@@ -1,14 +1,77 @@
 # Architecture
 
-`medallion-mlops` bootstraps a **single-node k3s homelab** and then hands it over
-to **GitOps**. The repository has two layers:
+`medallion-mlops` is a self-hosted, end-to-end **MLOps lab** that takes raw
+**NYC TLC taxi trip data** through a full **medallion architecture**
+(bronze → silver → gold) and all the way to monitored online model serving —
+every component self-hosted on a single-node **k3s homelab** and reconciled by
+**GitOps**.
+
+This document covers two things:
+
+1. **The target MLOps pipeline** — the end goal the lab is being built toward.
+2. **The platform foundation** — the cluster bootstrap and GitOps control plane
+   that is already in place and that everything else runs on.
+
+## Target MLOps pipeline
+
+See [`target-pipeline.excalidraw`](./target-pipeline.excalidraw) for the visual
+overview. The dataflow:
+
+```
+TLC trip data ──▶ Jupyter (EDA) ──▶ PySpark ETL
+                                         │
+        ┌────────────── RustFS (S3-compatible) ──────────────┐
+        │   Bronze ──▶ Silver ──▶ Gold (features per zone)    │
+        └────────────────────────┬────────────────────────────┘
+                                  ▼
+          MLflow ◀── Training ◀── Feast (offline + registry)
+            │                        │
+            ▼                        ▼
+      KServe / MLServer ◀────────  Redis (online store) ──▶ Monitoring
+                                                            (Evidently + Grafana)
+```
+
+| Stage | Component | Role |
+| --- | --- | --- |
+| Data source | NYC TLC trip data | Monthly Parquet drops (the raw input). |
+| Exploration | Jupyter / JupyterHub | Interactive EDA with pandas or DuckDB. |
+| ETL | PySpark | Cleaning + feature engineering, writes the medallion layers. |
+| Storage | RustFS (S3-compatible) | Object store holding bronze/silver/gold. |
+| Bronze | — | Raw Parquet, landed as-is. |
+| Silver | — | Unified, conformed schema. |
+| Gold | — | Curated features per taxi zone. |
+| Feature store | Feast | Offline store + feature registry. |
+| Online store | Redis | Low-latency features for inference. |
+| Training | Point-in-time join | Builds training sets from the feature store. |
+| Tracking | MLflow | Experiment tracking + model registry. |
+| Serving | KServe / MLServer | Online model inference. |
+| Monitoring | Evidently + Grafana | Data/model drift + dashboards. |
+| Orchestration | Argo Workflows | Pipeline DAGs: ETL → materialize → train → register. |
+| GitOps | ArgoCD | Reconciles the whole platform from this repo. |
+
+### Build status
+
+The platform foundation and GitOps control plane are built; the data/ML stages
+on top are the roadmap.
+
+- ✅ k3s + Cilium + ArgoCD (platform + GitOps control plane).
+- ✅ JupyterHub (the exploration/EDA stage).
+- 🔲 RustFS object storage + medallion bronze/silver/gold.
+- 🔲 PySpark ETL, Feast (+ Redis), MLflow, KServe, Evidently/Grafana.
+- 🔲 Argo Workflows pipelines.
+
+## Platform foundation
+
+The foundation bootstraps the **single-node k3s homelab** and then hands it over
+to **GitOps**. It has two layers:
 
 1. **Imperative bootstrap** — a handful of idempotent [`mise`](https://mise.jdx.dev)
    tasks that stand the cluster up from bare metal.
 2. **Declarative runtime** — once ArgoCD is running, the cluster reconciles itself
    from the manifests committed under `k8s/`.
 
-See [`architecture.excalidraw`](./architecture.excalidraw) for the visual overview.
+See [`architecture.excalidraw`](./architecture.excalidraw) for the foundation's
+visual overview.
 
 ## Design principles
 
@@ -83,6 +146,23 @@ service CIDR (`10.43.0.0/16`) in UFW when it is active.
 - `k8s/argocd/apps/cilium-lb.yaml` — ArgoCD manages the LoadBalancer IP pool +
   L2 policy (`include: cilium-lb.yaml`, server-side apply).
 
+### Applications — JupyterHub
+
+- `k8s/argocd/apps/jupyterhub.yaml` — multi-source Application: the `jupyterhub`
+  chart (`4.4.2`) from the upstream Helm repo plus in-repo values via `$values`.
+  Namespace `jupyterhub`, `selfHeal` + `prune`.
+- `k8s/jupyterhub/values.yaml` — homelab values: the proxy is exposed as a
+  `LoadBalancer` (gets a `lan-pool` IP), per-user storage on the k3s
+  `local-path` provisioner, and memory limits. The chart's **NetworkPolicies are
+  disabled** on purpose: Cilium enforces them even though k3s runs
+  `--disable-network-policy`, and the restrictive defaults block hub/KubeSpawner
+  egress to the private-IP Kubernetes API, which makes single-user servers fail
+  to spawn. This is the exploration/EDA stage of the target pipeline.
+
+> Note: the chart still uses the default `DummyAuthenticator` (any username).
+> Fine for an isolated LAN homelab; swap in a real authenticator before any
+> public exposure.
+
 ## Repository layout
 
 ```
@@ -94,12 +174,15 @@ service CIDR (`10.43.0.0/16`) in UFW when it is active.
     ├── network/
     │   ├── cilium-values.yaml     # Cilium Helm values (eBPF, L2, Hubble)
     │   └── cilium-lb.yaml         # LB IP pool + L2 announcement policy
+    ├── jupyterhub/
+    │   └── values.yaml            # JupyterHub Helm values (LoadBalancer, netpol off)
     └── argocd/
         ├── values.yaml            # ArgoCD Helm values (LoadBalancer, insecure)
         ├── root-app.yaml          # app-of-apps root
         └── apps/
             ├── cilium.yaml        # ArgoCD adopts Cilium (no prune)
-            └── cilium-lb.yaml     # ArgoCD manages the LB pool
+            ├── cilium-lb.yaml     # ArgoCD manages the LB pool
+            └── jupyterhub.yaml    # ArgoCD deploys JupyterHub (Helm chart)
 ```
 
 ## Access after bootstrap
