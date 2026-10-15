@@ -1,0 +1,30 @@
+# JupyterHub, managed by ArgoCD via its upstream Helm chart.
+# Multi-source: the chart comes from the JupyterHub Helm repo and the
+# values come from this repo ($values ref), mirroring the cilium app.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jupyterhub
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://hub.jupyter.org/helm-chart/
+      chart: jupyterhub
+      targetRevision: 4.4.2
+      helm:
+        valueFiles:
+          - $values/k8s/jupyterhub/values.yaml
+    - repoURL: https://github.com/aacecandev/medallion-mlops
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: jupyterhub
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

@@ -1,0 +1,23 @@
+# JupyterHub Helm values — https://z2jh.jupyter.org
+#
+# Single-node homelab: expose the proxy as a LoadBalancer Service so it
+# gets an IP from the Cilium lan-pool (192.168.1.240-250) and is
+# announced on the LAN via L2, the same way ArgoCD is reached.
+
+proxy:
+  service:
+    type: LoadBalancer
+
+# NOTE: the chart defaults to the DummyAuthenticator, which accepts any
+# username. That is fine for an isolated LAN homelab but is NOT safe to
+# expose publicly. Swap in a real authenticator before exposing this hub
+# beyond the local network.
+
+singleuser:
+  storage:
+    # k3s ships the local-path provisioner as the default StorageClass,
+    # so per-user PVCs are provisioned on the node's disk.
+    capacity: 2Gi
+  memory:
+    guarantee: 512M
+    limit: 1G
