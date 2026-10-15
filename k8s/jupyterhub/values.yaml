@@ -37,7 +37,7 @@ singleuser:
   # singleuser.image.pullSecrets) for the node to pull it.
   image:
     name: ghcr.io/aacecandev/medallion-mlops/jupyter-singleuser
-    tag: "0.2.0"
+    tag: "0.3.0"
   # Copy the starter notebooks (baked at /opt/examples) into each user's
   # home on start. `cp -n` is copy-if-not-exists, so it never clobbers a
   # user's own edits.
