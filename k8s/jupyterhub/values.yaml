@@ -1,0 +1,41 @@
+# JupyterHub Helm values — https://z2jh.jupyter.org
+#
+# Single-node homelab: expose the proxy as a LoadBalancer Service so it
+# gets an IP from the Cilium lan-pool (192.168.1.240-250) and is
+# announced on the LAN via L2, the same way ArgoCD is reached.
+
+# NetworkPolicies are DISABLED on purpose. k3s runs with
+# --disable-network-policy, but Cilium still enforces the restrictive
+# NetworkPolicies this chart ships by default. Those block egress to the
+# Kubernetes API server (a private IP / the Cilium `kube-apiserver`
+# entity), so KubeSpawner times out and single-user servers never start.
+# This homelab is an isolated LAN, so the chart's NetworkPolicies are not
+# our security boundary. Re-enable with explicit CiliumNetworkPolicies if
+# you ever need to harden egress.
+
+hub:
+  networkPolicy:
+    enabled: false
+
+proxy:
+  service:
+    type: LoadBalancer
+  chp:
+    networkPolicy:
+      enabled: false
+
+# NOTE: the chart defaults to the DummyAuthenticator, which accepts any
+# username. That is fine for an isolated LAN homelab but is NOT safe to
+# expose publicly. Swap in a real authenticator before exposing this hub
+# beyond the local network.
+
+singleuser:
+  networkPolicy:
+    enabled: false
+  storage:
+    # k3s ships the local-path provisioner as the default StorageClass,
+    # so per-user PVCs are provisioned on the node's disk.
+    capacity: 2Gi
+  memory:
+    guarantee: 512M
+    limit: 1G
