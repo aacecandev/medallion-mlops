@@ -71,8 +71,13 @@ installer:
 
 Answer files live in [`packer/proxmox-ve-unnatended`](./packer/proxmox-ve-unnatended).
 
+See [`docs/homelab-topology.excalidraw`](./docs/homelab-topology.excalidraw) for
+the network and storage layout.
+
 ## Step by step: install Proxmox on both hosts
 
+The whole flow is drawn in
+[`docs/proxmox-install-flow.excalidraw`](./docs/proxmox-install-flow.excalidraw).
 All commands run from the repository root. Paths below are relative to
 `packer/proxmox-ve-unnatended/`.
 
