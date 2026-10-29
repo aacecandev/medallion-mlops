@@ -1,6 +1,6 @@
 # medallion-mlops
 
-A self-hosted, end-to-end **MLOps lab** built on a single-node **k3s homelab**
+A self-hosted, end-to-end **MLOps lab** built on a **Proxmox VE homelab**
 and driven entirely by **GitOps**. The goal is to take raw **NYC Taxi &
 Limousine Commission (TLC)** trip data through a full **medallion architecture**
 (bronze → silver → gold) and all the way to a monitored, online model-serving
@@ -48,28 +48,47 @@ and described in [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
 This repo is being built bottom-up. The **infrastructure foundation and GitOps
 control plane are in place**; the data/ML pipeline on top is the roadmap.
 
-- ✅ **k3s** with kube-proxy and flannel disabled — Cilium owns the datapath.
-- ✅ **Cilium** (eBPF) as CNI + LoadBalancer with L2 announcements.
+- ✅ **Proxmox VE 9.2** unattended installs for both hosts (answer files and
+  ISO build in this repo, secrets encrypted with sops + age).
+- 🔲 Kubernetes on top of Proxmox (the earlier **k3s** setup is retired and
+  recoverable from the git tag `k3s`).
+- ✅ **Cilium** (eBPF; from the k3s era, to be re-applied) as CNI + LoadBalancer with L2 announcements.
 - ✅ **ArgoCD** app-of-apps as the GitOps control plane.
 - ✅ **JupyterHub** for the exploration/EDA stage.
 - 🔲 RustFS object storage + medallion layers.
 - 🔲 PySpark ETL, Feast, MLflow, KServe, Evidently/Grafana.
 - 🔲 Argo Workflows pipelines.
 
-## Quick start
+## Platform
+
+Two Proxmox VE hosts, reinstalled from scratch with the Proxmox automated
+installer:
+
+| Host | Role | Storage |
+| --- | --- | --- |
+| `beelink` (mini PC) | VMs / LXC | 2x NVMe, ZFS raid1 |
+| `nas` | File serving | NVMe system disk (ext4); 4 HDDs in a ZFS raidz1 pool created post-install |
+
+Answer files live in [`packer/proxmox-ve-unnatended`](./packer/proxmox-ve-unnatended).
+
+## Quick start: Proxmox ISO
 
 ```sh
 mise install                 # install pinned tooling
-mise run k3s-master-install  # install k3s (no kube-proxy / flannel)
-mise run network-install     # install Cilium CNI + LoadBalancer pool
-mise run argocd-install      # install ArgoCD + hand over to GitOps
+mise run age-keygen          # create the sops age key (once)
+sops packer/proxmox-ve-unnatended/secrets.sops.env   # set the real values
+openssl passwd -6            # generates ROOT_PASSWORD_HASHED
+mise run pve-validate        # render + validate both answer files
+mise run pve-iso -- beelink  # or: nas; output in packer/proxmox-ve-unnatended/build/
 ```
 
-To tear everything down (including Cilium datapath leftovers):
+Download the stock `proxmox-ve_9.2-1.iso` into `packer/proxmox-ve-unnatended/`
+first (URL and sha256 are in `.github/workflows/proxmox-iso.yml`). Write the
+result to a USB stick, e.g. `sudo dd if=build/proxmox-ve_9.2-1-beelink.iso of=/dev/sdX bs=4M status=progress conv=fsync`.
 
-```sh
-mise run k3s-uninstall
-```
+The prepared ISO embeds the answer file, including the root password hash, in
+plaintext: never share or upload it. CI only uses fake secrets and uploads no
+artifacts.
 
 ## Why "medallion"?
 
