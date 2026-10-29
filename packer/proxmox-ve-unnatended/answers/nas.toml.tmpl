@@ -25,5 +25,5 @@ filter.ID_NET_NAME_MAC = "*6c1ff7a98ec3"
 [disk-setup]
 filesystem = "ext4"
 # Only the NVMe system disk is listed. The four HDDs (sdX) are intentionally
-# never selected; the raidz1 data pool is created after installation.
+# never selected; their data filesystem is set up after installation.
 disk-list = ["nvme0n1"]

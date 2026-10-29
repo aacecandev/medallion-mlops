@@ -67,7 +67,7 @@ installer:
 | Host | Role | Storage |
 | --- | --- | --- |
 | `beelink` (mini PC) | VMs / LXC | 2x NVMe, ZFS raid1 |
-| `nas` | File serving | NVMe system disk (ext4); 4 HDDs in a ZFS raidz1 pool created post-install |
+| `nas` | File serving | NVMe system disk (ext4); 4 HDDs, data filesystem not decided yet (set up post-install) |
 
 Answer files live in [`packer/proxmox-ve-unnatended`](./packer/proxmox-ve-unnatended).
 
