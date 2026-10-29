@@ -171,7 +171,8 @@ sops -d secrets.sops.env | scripts/build-iso.sh "${host}"
 """
 
 [tasks.pve-usb]
-description = "Write a host's prepared Proxmox ISO to a USB stick, e.g. mise run pve-usb -- beelink /dev/sdX (erases the stick)"
+description = "Write a host's prepared Proxmox ISO to a USB stick (builds it if missing), e.g. mise run pve-usb -- beelink /dev/sdX (erases the stick)"
+depends = ["aia-build"]
 dir = "{{config_root}}/packer/proxmox-ve-unnatended"
 raw = true
 usage = '''
@@ -185,7 +186,6 @@ host="${usage_host:?usage: mise run pve-usb -- beelink|nas /dev/sdX}"
 dev="${usage_device:?usage: mise run pve-usb -- beelink|nas /dev/sdX}"
 iso="build/proxmox-ve_9.2-1-${host}.iso"
 
-[ -f "${iso}" ] || { echo "Missing ${iso}; run: mise run pve-iso -- ${host}" >&2; exit 1; }
 [ -b "${dev}" ] || { echo "${dev} is not a block device" >&2; exit 1; }
 
 # Guard against wiping the wrong disk: only whole, removable/USB disks
@@ -197,6 +197,12 @@ fi
 if lsblk -nro MOUNTPOINTS "${dev}" | grep -q .; then
   echo "${dev} has mounted partitions; unmount them first:" >&2
   lsblk -o NAME,SIZE,MOUNTPOINTS "${dev}" >&2; exit 1
+fi
+
+# Build the ISO on first use so one command takes a host to a bootable stick.
+if [ ! -f "${iso}" ]; then
+  echo "Building ${iso}..."
+  sops -d secrets.sops.env | scripts/build-iso.sh "${host}"
 fi
 
 lsblk -o NAME,SIZE,TRAN,MODEL "${dev}"

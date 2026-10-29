@@ -140,7 +140,8 @@ mise run pve-usb -- nas /dev/sdY
 
 The task only accepts a whole, removable or USB disk with nothing mounted,
 asks you to type the device path again before erasing it, and verifies the
-written bytes against the ISO.
+written bytes against the ISO. If the host's ISO is not built yet, it runs
+step 6 for you first.
 
 ### 8. Install
 
