@@ -1,0 +1,35 @@
+# Answer file template for beelink (Proxmox VE 9, kebab-case keys).
+# Only ${ROOT_PASSWORD_HASHED} and ${MAILTO} are substituted, by
+# scripts/build-iso.sh. Everything else is committed as-is.
+
+[global]
+keyboard = "es"
+country = "es"
+timezone = "Europe/Madrid"
+fqdn = "beelink.home.arpa"
+mailto = "${MAILTO}"
+root-password-hashed = "${ROOT_PASSWORD_HASHED}"
+root-ssh-keys = [
+  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDKwFgVMjJtsFt0vn0AM9Q10RJkgByxevhJY9kRQyH9U cardno:32_247_877",
+]
+reboot-on-error = false
+
+[network]
+source = "from-answer"
+cidr = "192.168.1.200/24"
+dns = "192.168.1.1"
+gateway = "192.168.1.1"
+# NIC MACs are unknown. This wildcard matches any predictable-name NIC
+# ("en*"); narrow it to the MAC of the target NIC (found with
+# `proxmox-auto-install-assistant device-info -t network` on the host) with
+# filter.ID_NET_NAME_MAC = "enx<mac>".
+filter.ID_NET_NAME = "en*"
+
+[disk-setup]
+filesystem = "zfs"
+zfs.raid = "raid1"
+disk-list = ["nvme0n1", "nvme1n1"]
+zfs.ashift = 12
+zfs.compress = "lz4"
+# zfs.arc-max is left unset: the installer default (10% of RAM, capped at
+# 16 GiB) applies.

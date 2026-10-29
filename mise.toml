@@ -147,3 +147,25 @@ description = "Run proxmox-auto-install-assistant in packer/proxmox-ve-unnatende
 depends = ["aia-build"]
 dir = "{{config_root}}/packer/proxmox-ve-unnatended"
 run = '${CONTAINER_ENGINE} run --rm --user "$(id -u):$(id -g)" -v "${PWD}:/work" "${AIA_IMAGE}"'
+
+[tasks.pve-validate]
+description = "Render and validate the Proxmox answer files for all hosts (needs real secrets in secrets.sops.env)"
+depends = ["aia-build"]
+dir = "{{config_root}}/packer/proxmox-ve-unnatended"
+run = """
+set -euo pipefail
+for host in beelink nas; do
+  sops -d secrets.sops.env | scripts/build-iso.sh "${host}" --validate-only
+done
+"""
+
+[tasks.pve-iso]
+description = "Build the prepared Proxmox ISO for a host, e.g. mise run pve-iso -- beelink (output in build/, contains secrets)"
+depends = ["aia-build"]
+dir = "{{config_root}}/packer/proxmox-ve-unnatended"
+usage = 'arg "<host>" help="beelink or nas"'
+run = """
+set -euo pipefail
+host="${usage_host:?usage: mise run pve-iso -- beelink|nas}"
+sops -d secrets.sops.env | scripts/build-iso.sh "${host}"
+"""
