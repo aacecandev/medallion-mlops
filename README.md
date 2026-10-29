@@ -71,24 +71,87 @@ installer:
 
 Answer files live in [`packer/proxmox-ve-unnatended`](./packer/proxmox-ve-unnatended).
 
-## Quick start: Proxmox ISO
+## Step by step: install Proxmox on both hosts
+
+All commands run from the repository root. Paths below are relative to
+`packer/proxmox-ve-unnatended/`.
+
+### 1. Install the tooling
 
 ```sh
-mise install                 # install pinned tooling
-mise run age-keygen          # create the sops age key (once)
-sops packer/proxmox-ve-unnatended/secrets.sops.env   # set the real values
-openssl passwd -6            # generates ROOT_PASSWORD_HASHED
-mise run pve-validate        # render + validate both answer files
-mise run pve-iso -- beelink  # or: nas; output in packer/proxmox-ve-unnatended/build/
+mise install
 ```
 
-Download the stock `proxmox-ve_9.2-1.iso` into `packer/proxmox-ve-unnatended/`
-first (URL and sha256 are in `.github/workflows/proxmox-iso.yml`). Write the
-result to a USB stick, e.g. `sudo dd if=build/proxmox-ve_9.2-1-beelink.iso of=/dev/sdX bs=4M status=progress conv=fsync`.
+Also needed: `docker` (runs `proxmox-auto-install-assistant`), `sudo`, and
+`openssl`.
 
-The prepared ISO embeds the answer file, including the root password hash, in
-plaintext: never share or upload it. CI only uses fake secrets and uploads no
-artifacts.
+### 2. Create the sops age key (once per workstation)
+
+```sh
+mise run age-keygen
+```
+
+The private key stays in `~/.config/sops/age/keys.txt`. Back it up: without it
+`secrets.sops.env` cannot be decrypted. A new key must also be added as a
+recipient in `.sops.yaml` and the file re-encrypted with `sops updatekeys`.
+
+### 3. Set the real secrets
+
+```sh
+openssl passwd -6                                    # prints the root password hash
+sops packer/proxmox-ve-unnatended/secrets.sops.env   # set ROOT_PASSWORD_HASHED and MAILTO
+```
+
+### 4. Download the stock Proxmox ISO
+
+```sh
+cd packer/proxmox-ve-unnatended
+curl -fLO https://enterprise.proxmox.com/iso/proxmox-ve_9.2-1.iso
+echo "4e88fe416df9b527624a175f24c9aa07c714d3332afb1ee3dbf3879573ef2c6c  proxmox-ve_9.2-1.iso" | sha256sum -c -
+cd -
+```
+
+The URL and checksum are pinned in `.github/workflows/proxmox-iso.yml`.
+
+### 5. Validate both answer files
+
+```sh
+mise run pve-validate
+```
+
+### 6. Build the prepared ISOs
+
+```sh
+mise run pve-iso -- beelink   # mini PC
+mise run pve-iso -- nas
+```
+
+Output: `build/proxmox-ve_9.2-1-beelink.iso` and `build/proxmox-ve_9.2-1-nas.iso`.
+
+### 7. Write each ISO to a USB stick
+
+Plug in the stick, find its device with `lsblk`, and unmount any mounted
+partition. Then:
+
+```sh
+mise run pve-usb -- beelink /dev/sdX
+mise run pve-usb -- nas /dev/sdY
+```
+
+The task only accepts a whole, removable or USB disk with nothing mounted,
+asks you to type the device path again before erasing it, and verifies the
+written bytes against the ISO.
+
+### 8. Install
+
+Boot each host from its stick. The installer runs unattended, selects disks
+and the NIC from the answer file, and reboots into Proxmox VE. The NAS HDDs are
+never touched; their ZFS pool is created after the install.
+
+> **Secrets:** the prepared ISOs (and the sticks) embed the answer file,
+> including the root password hash, in plaintext. Never share or upload them,
+> and wipe the sticks after installing. CI only uses fake secrets and uploads
+> no artifacts.
 
 ## Why "medallion"?
 

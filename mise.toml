@@ -169,3 +169,45 @@ set -euo pipefail
 host="${usage_host:?usage: mise run pve-iso -- beelink|nas}"
 sops -d secrets.sops.env | scripts/build-iso.sh "${host}"
 """
+
+[tasks.pve-usb]
+description = "Write a host's prepared Proxmox ISO to a USB stick, e.g. mise run pve-usb -- beelink /dev/sdX (erases the stick)"
+dir = "{{config_root}}/packer/proxmox-ve-unnatended"
+raw = true
+usage = '''
+arg "<host>" help="beelink or nas"
+arg "<device>" help="whole USB disk, e.g. /dev/sdb (not a partition)"
+'''
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+host="${usage_host:?usage: mise run pve-usb -- beelink|nas /dev/sdX}"
+dev="${usage_device:?usage: mise run pve-usb -- beelink|nas /dev/sdX}"
+iso="build/proxmox-ve_9.2-1-${host}.iso"
+
+[ -f "${iso}" ] || { echo "Missing ${iso}; run: mise run pve-iso -- ${host}" >&2; exit 1; }
+[ -b "${dev}" ] || { echo "${dev} is not a block device" >&2; exit 1; }
+
+# Guard against wiping the wrong disk: only whole, removable/USB disks
+# with nothing mounted are accepted.
+[ "$(lsblk -dno TYPE "${dev}")" = "disk" ] || { echo "${dev} is not a whole disk" >&2; exit 1; }
+if [ "$(lsblk -dno RM "${dev}" | tr -d ' ')" != "1" ] && [ "$(lsblk -dno TRAN "${dev}")" != "usb" ]; then
+  echo "${dev} is neither removable nor USB; refusing" >&2; exit 1
+fi
+if lsblk -nro MOUNTPOINTS "${dev}" | grep -q .; then
+  echo "${dev} has mounted partitions; unmount them first:" >&2
+  lsblk -o NAME,SIZE,MOUNTPOINTS "${dev}" >&2; exit 1
+fi
+
+lsblk -o NAME,SIZE,TRAN,MODEL "${dev}"
+echo
+echo "ALL DATA on ${dev} will be erased and replaced by ${iso}."
+read -r -p "Type the device path again to confirm: " answer
+[ "${answer}" = "${dev}" ] || { echo "Aborted." >&2; exit 1; }
+
+sudo dd if="${iso}" of="${dev}" bs=4M status=progress oflag=direct conv=fsync
+sync
+echo "Verifying..."
+sudo cmp -n "$(stat -c%s "${iso}")" "${iso}" "${dev}"
+echo "Done: ${dev} boots the ${host} unattended installer."
+"""

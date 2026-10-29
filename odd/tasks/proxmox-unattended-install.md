@@ -32,6 +32,8 @@ Gateway and DNS: 192.168.1.1. Keyboard `es`, country `es`, timezone `Europe/Madr
 - [x] T3 CI workflow: validate + prepare-iso with fake secrets, no artifacts. Route: delegated writer (same).
 - [x] T4 Retire k3s: remove k3s tool and k3s tasks from `mise.toml`, update README. Tag `k3s` created at 262b2e0. Route: delegated writer (same).
 
+- [x] T5 `pve-usb` mise task (guarded dd + cmp verify) and step-by-step README. Route: inline (one task + docs).
+
 ## Acceptance criteria
 
 - `mise run pve-iso -- beelink` and `-- nas` produce prepared ISOs locally once real secrets are set.
