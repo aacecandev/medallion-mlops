@@ -1,6 +1,0 @@
-# sops has no TOML support, so secrets live in *.sops.env files and are
-# rendered into answer files at build time. The private key is read from
-# SOPS_AGE_KEY_FILE (set in the root mise.toml).
-creation_rules:
-  - path_regex: .*\.sops\.(ya?ml|env)$
-    age: age10zgfnnd70a8dg2trsyk4cch8jwt3qttxavgsz43z0t594sj5ssxqx4wh68

@@ -19,11 +19,8 @@ source = "from-answer"
 cidr = "192.168.1.200/24"
 dns = "192.168.1.1"
 gateway = "192.168.1.1"
-# NIC MACs are unknown. This wildcard matches any predictable-name NIC
-# ("en*"); narrow it to the MAC of the target NIC (found with
-# `proxmox-auto-install-assistant device-info -t network` on the host) with
-# filter.ID_NET_NAME_MAC = "enx<mac>".
-filter.ID_NET_NAME = "en*"
+# Pin the NIC by MAC so the right port gets the static IP.
+filter.ID_NET_NAME_MAC = "*78553602af7a"
 
 [disk-setup]
 filesystem = "zfs"
