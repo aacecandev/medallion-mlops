@@ -1,0 +1,40 @@
+# python3-systemd lets fail2ban read the journal (PVE 9 has no auth.log/daemon.log).
+- name: Install fail2ban
+  ansible.builtin.apt:
+    name:
+      - fail2ban
+      - python3-systemd
+    state: present
+
+- name: Install Proxmox login filter
+  ansible.builtin.copy:
+    src: proxmox.conf
+    dest: /etc/fail2ban/filter.d/proxmox.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart fail2ban
+
+- name: Configure jails
+  ansible.builtin.template:
+    src: proxmox-jails.local.j2
+    dest: /etc/fail2ban/jail.d/proxmox-jails.local
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart fail2ban
+
+# Catches a bad filter or jail before the restart would take fail2ban down.
+- name: Test fail2ban configuration
+  ansible.builtin.command: fail2ban-client --test
+  changed_when: false
+  check_mode: false
+  when: not ansible_check_mode
+
+- name: Ensure fail2ban is running
+  ansible.builtin.systemd_service:
+    name: fail2ban
+    state: started
+    enabled: true
+  # In check mode on a fresh host the package (and its unit) is not installed yet.
+  ignore_errors: "{{ ansible_check_mode }}"

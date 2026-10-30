@@ -29,3 +29,11 @@ pve_service_users:
 # 13_ksmtuned: on for VM hosts; override per host in host_vars.
 ksmtuned_enabled: true
 ksmtuned_settings: {} # e.g. {KSM_THRES_COEF: 30}; empty keeps ksmtuned defaults
+
+# 18_fail2ban: bans after maxretry failures within findtime (SSH and Proxmox web/API logins).
+fail2ban_bantime: 1h
+fail2ban_findtime: 10m
+fail2ban_maxretry: 5
+fail2ban_ignoreip: # never banned; recover from a self-ban on the console with: fail2ban-client unban --all
+  - 127.0.0.1/8
+  - ::1

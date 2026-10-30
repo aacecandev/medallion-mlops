@@ -4,4 +4,4 @@ skip_list:
   - var-naming[no-role-prefix] # global_* facts from 00_init are shared by later roles
 exclude_paths:
   - "**/*.sops.yml" # sops-encrypted, not hand-written YAML
-  - roles/18_fail2ban # not ported yet
+  - .ansible/ # ansible-lint cache

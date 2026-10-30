@@ -84,7 +84,12 @@ chain; content verified identical).
       `IdentitiesOnly=yes`, dropped `host_key_checking = False` and `allow_world_readable_tmpfiles`;
       `temp/` gitignored; roles imported with tags (`always`, `timezone`, `sshd`, `users`, `ksmtuned`).
       Proof: empty known_hosts refused; only the YubiKey key offered; full run `changed=0`. Route: inline.
-- [ ] T8 `18_fail2ban`.
+- [x] T8 `18_fail2ban`: installs fail2ban + python3-systemd, Proxmox filter (journal, pvedaemon), jail file
+      in `jail.d/` on top of Debian's sshd defaults, `nftables` banaction (own table, independent of
+      pve-firewall), `fail2ban-client --test` before restart. Fixed clone bugs: never installed the package;
+      `ignoreregex = .` ignored every line so the proxmox jail could never ban. Vars: bantime 1h, findtime 10m,
+      maxretry 5, ignoreip localhost only. Proof: jails `proxmox, sshd` on both hosts, rerun `changed=0`;
+      one test login failure on nas counted (`Found 192.168.1.37`, IPv4-normalised). Route: inline.
 - [ ] T9+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
 
 ## Progress

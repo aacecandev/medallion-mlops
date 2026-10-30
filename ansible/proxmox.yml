@@ -27,3 +27,8 @@
       ansible.builtin.import_role:
         name: 13_ksmtuned
       tags: [ksmtuned]
+
+    - name: Fail2ban
+      ansible.builtin.import_role:
+        name: 18_fail2ban
+      tags: [fail2ban]
