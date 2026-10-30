@@ -34,6 +34,15 @@
     name: sanoid
     state: present
 
+# sanoid reads /etc/sanoid/sanoid.conf, but the Debian package does not create the directory.
+- name: Create sanoid configuration directory
+  ansible.builtin.file:
+    path: /etc/sanoid
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
 - name: Configure sanoid snapshots
   ansible.builtin.template:
     src: sanoid.conf.j2
