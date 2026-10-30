@@ -17,8 +17,8 @@ from the reference clone in `temp/proxmox-bootstrap` and fixing each on the way.
 
 - Reference clone `temp/proxmox-bootstrap` is read-only reference; never commit it
   (it contains plaintext passwords and personal keys).
-- Shared values in `group_vars/all.yml`; per-host values in `host_vars/<host>.yml`
-  (auto-loaded by Ansible, no `include_vars`).
+- Shared values in `group_vars/all.yml`; per-host values in `host_vars/<host>/main.yml`
+  (auto-loaded, no `include_vars`). Once `host_vars/<host>/` exists Ansible ignores `host_vars/<host>.yml`.
 - SSH auth via YubiKey key served by gpg-agent (`private_key_file = ~/.ssh/yubikey.pub`); no passwords in vars.
 - Secrets, if any are needed, encrypted (repo already uses sops+age).
 - PVE 9 / Debian trixie only; no PVE 7/8 branches.
@@ -41,7 +41,7 @@ chain; content verified identical).
 | Tracker | `feat/ansible-host-config` | `main` | empty tracker commit; draft, no-merge until chain done | 0 |
 | 01 | `feat/ansible-host-config-01-base` | tracker | T1–T4: requirements, `00_init`, `02_date_timezone`, `05_init_sshd` | 245 |
 | 02 | `feat/ansible-host-config-02-users` | 01 | T5: sops vars, `06_configure_users`, service users, API tokens | 241 |
-| 03 | `feat/ansible-host-config-03-services` | 02 | T6+: next roles | in progress |
+| 03 | `feat/ansible-host-config-03-services` | 02 | T6+: `13_ksmtuned`, next roles | in progress |
 
 ## Tasks
 
@@ -76,7 +76,10 @@ chain; content verified identical).
       tasks skip in check mode). Real run by the user: both hosts have both users, privsep tokens and
       user+token ACLs on `/`; `host_vars/{beelink,nas}/pve_tokens.sops.yml` (0600) decrypt to both
       secrets; each token returns HTTP 200 on `GET /api2/json/version`.
-- [ ] T6+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
+- [x] T6 `13_ksmtuned`: per-host `ksmtuned_enabled` (beelink on, nas off: no VMs), optional
+      `ksmtuned_settings` overrides; stock config left alone when empty. Fixed clone bug ("enable" task set
+      `enabled: false`). Moved per-host vars to `host_vars/<host>/main.yml`. Route: inline.
+- [ ] T7+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
 
 ## Progress
 

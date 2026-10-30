@@ -25,3 +25,7 @@ pve_service_users:
     comment: Prometheus pve-exporter (managed by Ansible)
     role: PVEAuditor
     token: exporter
+
+# 13_ksmtuned: on for VM hosts; override per host in host_vars.
+ksmtuned_enabled: true
+ksmtuned_settings: {} # e.g. {KSM_THRES_COEF: 30}; empty keeps ksmtuned defaults

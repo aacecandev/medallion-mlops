@@ -16,3 +16,7 @@
     - name: Users
       ansible.builtin.include_role:
         name: 06_configure_users
+
+    - name: KSM tuning
+      ansible.builtin.include_role:
+        name: 13_ksmtuned
