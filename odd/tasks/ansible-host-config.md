@@ -55,7 +55,16 @@ Strategy: `ask-on-risk`. Forecast: well over 400 authored lines across all roles
       `authorized_key` (YubiKey), `pveum` user + `Administrator` ACL on `/` via JSON-checked idempotency.
       Dropped root password change (set at install) and NOPASSWD sudo. `ansible-lint` passed;
       `--check --diff` passed both hosts (3 changes). Real run blocked by the auto-mode classifier
-      (admin account creation = permission grant): pending, user to run.
+      (admin account creation = permission grant): user ran it (`358f895`); verified on both hosts:
+      `alejandro` in `sudo`, `alejandro@pam` `Administrator` on `/`.
+      API tokens (user decision): service users `terraform@pve` (`Administrator`, narrow later) and
+      `monitoring@pve` (`PVEAuditor`), one privsep token each, ACL on user and token. Tooling decision:
+      `pveum`, not `community.proxmox` (2.0.0 installed / 2.1.0 latest: tokens via `proxmox_user`, but
+      needs API credentials and `proxmoxer>=2.3`, trixie ships 2.2.0). Secrets saved on creation with
+      `community.sops.sops_encrypt` to `host_vars/<host>/pve_tokens.sops.yml` (`pve_token_secrets`);
+      assert fails if a token exists without a saved secret. Local probe proved encrypt + per-host
+      readback next to `host_vars/<host>.yml`. `ansible-lint` passed; `--check` passed (no-op: command
+      tasks skip in check mode). Pending: real run by the user (classifier blocks admin grants).
 - [ ] T6+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
 
 ## Progress
