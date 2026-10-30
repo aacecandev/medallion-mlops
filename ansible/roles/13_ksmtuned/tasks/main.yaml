@@ -1,0 +1,18 @@
+# ksmtuned (package ksm-control-daemon, shipped with PVE) starts KSM page merging
+# for VM memory when free RAM drops below KSM_THRES_COEF percent (default 20).
+- name: Configure ksmtuned
+  ansible.builtin.template:
+    src: ksmtuned.conf.j2
+    dest: /etc/ksmtuned.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart ksmtuned
+  # Without overrides the stock, documented file is left alone.
+  when: ksmtuned_enabled and ksmtuned_settings | length > 0
+
+- name: Set ksmtuned service state
+  ansible.builtin.systemd_service:
+    name: ksmtuned
+    state: "{{ 'started' if ksmtuned_enabled else 'stopped' }}"
+    enabled: "{{ ksmtuned_enabled }}"

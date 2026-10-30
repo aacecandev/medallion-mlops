@@ -1,0 +1,16 @@
+# Managed by Ansible (18_fail2ban). Debian's jail.d/defaults-debian.conf
+# already enables [sshd] with the systemd backend; this file adds settings on top.
+[DEFAULT]
+bantime = {{ fail2ban_bantime }}
+findtime = {{ fail2ban_findtime }}
+maxretry = {{ fail2ban_maxretry }}
+ignoreip = {{ fail2ban_ignoreip | join(' ') }}
+# Own nftables table, independent of pve-firewall (iptables legacy or nftables).
+banaction = nftables[type=multiport]
+banaction_allports = nftables[type=allports]
+
+[proxmox]
+enabled = true
+port = https,http,8006
+filter = proxmox
+backend = systemd

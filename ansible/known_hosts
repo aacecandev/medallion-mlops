@@ -1,0 +1,6 @@
+# Pinned SSH host keys (ed25519). Fingerprints verified against each host's
+# /etc/ssh/ssh_host_ed25519_key.pub. Update after a reinstall.
+# 192.168.1.200:22 SSH-2.0-OpenSSH_10.0p2 Debian-7+deb13u4
+192.168.1.200 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBMh+XRZIa7Mxo0MSPiZokCMlQk5Jebi+lBPyYBC+ILt
+# 192.168.1.138:22 SSH-2.0-OpenSSH_10.0p2 Debian-7+deb13u4
+192.168.1.138 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID80ivzDjA98Iloa3E7YUsFYnj1f0vppZfN1J0xOb8S6

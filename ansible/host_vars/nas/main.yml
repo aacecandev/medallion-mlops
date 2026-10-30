@@ -1,0 +1,3 @@
+---
+# 13_ksmtuned: file server without VMs, KSM would only poll for nothing.
+ksmtuned_enabled: false

@@ -17,8 +17,8 @@ from the reference clone in `temp/proxmox-bootstrap` and fixing each on the way.
 
 - Reference clone `temp/proxmox-bootstrap` is read-only reference; never commit it
   (it contains plaintext passwords and personal keys).
-- Shared values in `group_vars/all.yml`; per-host values in `host_vars/<host>.yml`
-  (auto-loaded by Ansible, no `include_vars`).
+- Shared values in `group_vars/all.yml`; per-host values in `host_vars/<host>/main.yml`
+  (auto-loaded, no `include_vars`). Once `host_vars/<host>/` exists Ansible ignores `host_vars/<host>.yml`.
 - SSH auth via YubiKey key served by gpg-agent (`private_key_file = ~/.ssh/yubikey.pub`); no passwords in vars.
 - Secrets, if any are needed, encrypted (repo already uses sops+age).
 - PVE 9 / Debian trixie only; no PVE 7/8 branches.
@@ -32,7 +32,16 @@ from the reference clone in `temp/proxmox-bootstrap` and fixing each on the way.
 
 ## Delivery
 
-Strategy: `ask-on-risk`. Forecast: well over 400 authored lines across all roles.
+Strategy: `ask-on-risk`; chain strategy (user decision): `feature-branch-chain`.
+Branches were restructured locally after T5 (commits rebased, so hashes in Progress predate the
+chain; content verified identical).
+
+| Slice | Branch | Base | Holds | Size |
+|---|---|---|---|---|
+| Tracker | `feat/ansible-host-config` | `main` | empty tracker commit; draft, no-merge until chain done | 0 |
+| 01 | `feat/ansible-host-config-01-base` | tracker | T1–T4: requirements, `00_init`, `02_date_timezone`, `05_init_sshd` | 245 |
+| 02 | `feat/ansible-host-config-02-users` | 01 | T5: sops vars, `06_configure_users`, service users, API tokens | 241 |
+| 03 | `feat/ansible-host-config-03-services` | 02 | T6+: `13_ksmtuned`, next roles | in progress |
 
 ## Tasks
 
@@ -67,7 +76,21 @@ Strategy: `ask-on-risk`. Forecast: well over 400 authored lines across all roles
       tasks skip in check mode). Real run by the user: both hosts have both users, privsep tokens and
       user+token ACLs on `/`; `host_vars/{beelink,nas}/pve_tokens.sops.yml` (0600) decrypt to both
       secrets; each token returns HTTP 200 on `GET /api2/json/version`.
-- [ ] T6+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
+- [x] T6 `13_ksmtuned`: per-host `ksmtuned_enabled` (beelink on, nas off: no VMs), optional
+      `ksmtuned_settings` overrides; stock config left alone when empty. Fixed clone bug ("enable" task set
+      `enabled: false`). Moved per-host vars to `host_vars/<host>/main.yml`. Route: inline.
+- [x] T7 Hardening of the Ansible setup (user-approved items 1-4): host keys pinned in `ansible/known_hosts`
+      (fingerprints match each host's own `ssh_host_ed25519_key.pub`), `StrictHostKeyChecking=yes`,
+      `IdentitiesOnly=yes`, dropped `host_key_checking = False` and `allow_world_readable_tmpfiles`;
+      `temp/` gitignored; roles imported with tags (`always`, `timezone`, `sshd`, `users`, `ksmtuned`).
+      Proof: empty known_hosts refused; only the YubiKey key offered; full run `changed=0`. Route: inline.
+- [x] T8 `18_fail2ban`: installs fail2ban + python3-systemd, Proxmox filter (journal, pvedaemon), jail file
+      in `jail.d/` on top of Debian's sshd defaults, `nftables` banaction (own table, independent of
+      pve-firewall), `fail2ban-client --test` before restart. Fixed clone bugs: never installed the package;
+      `ignoreregex = .` ignored every line so the proxmox jail could never ban. Vars: bantime 1h, findtime 10m,
+      maxretry 5, ignoreip localhost only. Proof: jails `proxmox, sshd` on both hosts, rerun `changed=0`;
+      one test login failure on nas counted (`Found 192.168.1.37`, IPv4-normalised). Route: inline.
+- [ ] T9+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
 
 ## Progress
 
