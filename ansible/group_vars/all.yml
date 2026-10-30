@@ -7,3 +7,21 @@ ntp_servers:
 # 05_init_sshd: root stays reachable with keys only (Ansible and Proxmox tooling use it)
 sshd_permit_root_login: prohibit-password
 sshd_password_authentication: false
+
+# 06_configure_users (admin_user_password_hash lives in all.sops.yml)
+admin_user: alejandro
+admin_user_pve_role: Administrator
+admin_user_ssh_keys:
+  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDKwFgVMjJtsFt0vn0AM9Q10RJkgByxevhJY9kRQyH9U cardno:32_247_877
+
+# 06_configure_users: Proxmox-only service users, one privilege-separated token each.
+# Secrets land in host_vars/<host>/pve_tokens.sops.yml as pve_token_secrets["<userid>!<token>"].
+pve_service_users:
+  - userid: terraform@pve
+    comment: OpenTofu/Terraform provider (managed by Ansible)
+    role: Administrator # narrow to a custom role later
+    token: terraform
+  - userid: monitoring@pve
+    comment: Prometheus pve-exporter (managed by Ansible)
+    role: PVEAuditor
+    token: exporter

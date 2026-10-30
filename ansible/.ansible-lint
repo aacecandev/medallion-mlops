@@ -3,6 +3,6 @@ skip_list:
   - role-name # roles are numbered to show run order (00_init, 02_...)
   - var-naming[no-role-prefix] # global_* facts from 00_init are shared by later roles
 exclude_paths:
-  - roles/06_configure_users # not ported yet
-  - roles/13_ksmtuned
+  - "**/*.sops.yml" # sops-encrypted, not hand-written YAML
+  - roles/13_ksmtuned # not ported yet
   - roles/18_fail2ban

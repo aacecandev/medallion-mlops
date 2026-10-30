@@ -1,0 +1,69 @@
+# Proxmox shows a token secret only once, at creation. Missing tokens are created
+# and their secrets encrypted straight into host_vars/<host>/pve_tokens.sops.yml,
+# which the community.sops vars plugin loads back as pve_token_secrets.
+# Rotate a token: pveum user token remove <userid> <token>, then rerun.
+
+- name: List Proxmox API tokens
+  ansible.builtin.command: pveum user token list {{ item.userid }} --output-format json
+  loop: "{{ pve_service_users }}"
+  loop_control:
+    label: "{{ item.userid }}"
+  register: pveum_tokens
+  changed_when: false
+  check_mode: false
+  # A user that does not exist yet (check mode) has no tokens.
+  failed_when: false
+
+- name: Create missing Proxmox API tokens
+  ansible.builtin.command: >-
+    pveum user token add {{ item.item.userid }} {{ item.item.token }}
+    --privsep 1 --comment "{{ item.item.comment }}" --output-format json
+  loop: "{{ pveum_tokens.results }}"
+  loop_control:
+    label: "{{ item.item.userid }}!{{ item.item.token }}"
+  when: >-
+    item.rc != 0 or item.item.token not in (item.stdout | from_json | map(attribute='tokenid'))
+  register: pveum_new_tokens
+  changed_when: true
+  no_log: true
+
+- name: Collect new API token secrets
+  ansible.builtin.set_fact:
+    pve_token_secrets: >-
+      {{ pve_token_secrets | default({})
+         | combine({(item.stdout | from_json)['full-tokenid']: (item.stdout | from_json)['value']}) }}
+  loop: "{{ pveum_new_tokens.results | selectattr('changed') }}"
+  register: pve_secrets_collected
+  no_log: true
+
+- name: Ensure host_vars directory for token secrets
+  ansible.builtin.file:
+    path: "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}"
+    state: directory
+    mode: "0755"
+  delegate_to: localhost
+  become: false
+  when: pve_secrets_collected.results | length > 0
+
+- name: Save API token secrets
+  community.sops.sops_encrypt:
+    path: "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/pve_tokens.sops.yml"
+    content_yaml:
+      pve_token_secrets: "{{ pve_token_secrets }}"
+    mode: "0600"
+  delegate_to: localhost
+  become: false
+  when: pve_secrets_collected.results | length > 0
+  no_log: true
+
+# Fails when a token exists on the host but its secret was never saved; rotate it.
+- name: Verify every API token secret is saved
+  ansible.builtin.assert:
+    that: pve_tokens_missing | length == 0
+    fail_msg: "Token secrets missing from pve_tokens.sops.yml, rotate: {{ pve_tokens_missing | join(', ') }}"
+    quiet: true
+  when: not ansible_check_mode
+  vars:
+    pve_tokens_missing: >-
+      {{ pve_service_users | map(attribute='userid') | zip(pve_service_users | map(attribute='token'))
+         | map('join', '!') | reject('in', pve_token_secrets | default({})) | list }}

@@ -46,7 +46,27 @@ Strategy: `ask-on-risk`. Forecast: well over 400 authored lines across all roles
       reload (not restart), assert effective `sshd -T` values. Policy (user decision): root with keys only
       (`prohibit-password`), password auth off, port 22. Dropped clone's PAM edits (pam_limits/pam_env
       off would break limits and locale), `AddressFamily inet`, and defaults-only lines. Route: inline.
-- [ ] T5 `06_configure_users`: user's own admin user (and possibly Proxmox API tokens; scope to agree).
+- [x] T5 `06_configure_users`: admin user `alejandro` (sudo, YubiKey key, PAM realm `Administrator`),
+      password hash in sops-encrypted `group_vars/all.sops.yml`; Proxmox API tokens scope to agree.
+      Done so far: `community.sops` in requirements, `vars_plugins_enabled` in `ansible.cfg`, `.sops.yaml`
+      rule for `ansible/(group|host)_vars/*.sops.y(a)ml`; probe file decrypted via `ansible-inventory`
+      (`aeb20be`). User created `group_vars/all.sops.yml` (yescrypt hash). Role rewritten: install `sudo`
+      (absent on PVE; Debian sudoers already grants `%sudo` with password), user + hash, exclusive
+      `authorized_key` (YubiKey), `pveum` user + `Administrator` ACL on `/` via JSON-checked idempotency.
+      Dropped root password change (set at install) and NOPASSWD sudo. `ansible-lint` passed;
+      `--check --diff` passed both hosts (3 changes). Real run blocked by the auto-mode classifier
+      (admin account creation = permission grant): user ran it (`358f895`); verified on both hosts:
+      `alejandro` in `sudo`, `alejandro@pam` `Administrator` on `/`.
+      API tokens (user decision): service users `terraform@pve` (`Administrator`, narrow later) and
+      `monitoring@pve` (`PVEAuditor`), one privsep token each, ACL on user and token. Tooling decision:
+      `pveum`, not `community.proxmox` (2.0.0 installed / 2.1.0 latest: tokens via `proxmox_user`, but
+      needs API credentials and `proxmoxer>=2.3`, trixie ships 2.2.0). Secrets saved on creation with
+      `community.sops.sops_encrypt` to `host_vars/<host>/pve_tokens.sops.yml` (`pve_token_secrets`);
+      assert fails if a token exists without a saved secret. Local probe proved encrypt + per-host
+      readback next to `host_vars/<host>.yml`. `ansible-lint` passed; `--check` passed (no-op: command
+      tasks skip in check mode). Real run by the user: both hosts have both users, privsep tokens and
+      user+token ACLs on `/`; `host_vars/{beelink,nas}/pve_tokens.sops.yml` (0600) decrypt to both
+      secrets; each token returns HTTP 200 on `GET /api2/json/version`.
 - [ ] T6+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
 
 ## Progress

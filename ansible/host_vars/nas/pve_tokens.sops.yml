@@ -1,0 +1,18 @@
+pve_token_secrets:
+    monitoring@pve!exporter: ENC[AES256_GCM,data:3QTpeF/NhP9FhOlfVgZwEZqLML/POUfmnjlT6PXdNbKvBVBp,iv:0y3wCmO+wTaGajCBTyRG7d2U75fFH5mIt2TjroT1X4o=,tag:cLT8XMerDpZI8pG11Fk2Lw==,type:str]
+    terraform@pve!terraform: ENC[AES256_GCM,data:M0MGjUiCzvAk66gaZ9FRLoxSU70zJafAGdRPoC0+qwv6qfTf,iv:nB/mz1/pNFsCpSEIsbOWsPlkVXDPUhoOrkZa5Qgx1dc=,tag:cAwjpMBATZN/wctvTIJdfQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBPWDVRREpsN1g2UUFqNkRW
+            SWdOaFNRNmt3K3lBOFNhMzRMSjh3VTdkaXhJCktOTzZJWkNJM3RwTkJoK2JUaXRa
+            VThQVUtERHM2Q3lSWFY3N09Sd2ZiUGsKLS0tIFJQYkxMdDF5OVFJRExiNnNhbWR1
+            clJtbktLdUxFcEZQeTBBWEhwYUdIaVkKOFgyWyg37KryFsmI7BNRcGqU8OebYhw6
+            Ig39A3VRbGH9BXsaDD5ItinxJ9nRqhjkq4+viE2ih+B/obR07vYw/g==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age10zgfnnd70a8dg2trsyk4cch8jwt3qttxavgsz43z0t594sj5ssxqx4wh68
+    lastmodified: "2026-10-30T01:46:20Z"
+    mac: ENC[AES256_GCM,data:isXQI8oXw9Ao2w01Wh5EwPJGf5pQxcrWoi9zgwQ/i/iUBZLWYC+tq1J5WfLYw7CCvVaPubg4pbXOCG7yynLO0HoKKqvCOkICppA7WTXDCx3OwykbpVv5fjejQcViZqqyVXfjm+BQ9dMIxGUBBBKvAhSd37xD6xjeO1EIE9sD1d8=,iv:U9G2xMDXMBE50LIN/PouN5T+7Jw72F94YITFDrwGS8A=,tag:Bo6EKsAQ8hs2EMYyg3vjiw==,type:str]
+    unencrypted_suffix: _unencrypted
+    version: 3.13.3

@@ -12,3 +12,7 @@
     - name: SSH server
       ansible.builtin.include_role:
         name: 05_init_sshd
+
+    - name: Users
+      ansible.builtin.include_role:
+        name: 06_configure_users
