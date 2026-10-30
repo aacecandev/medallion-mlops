@@ -41,3 +41,16 @@ fail2ban_ignoreip: # never banned; recover from a self-ban on the console with: 
 # 22_mail: all host mail relays through Google Workspace.
 # admin_email, mail_relay_user and mail_relay_password live in all.sops.yml.
 mail_relayhost: "[smtp.gmail.com]:587"
+
+# 04_install_software: CPU microcode is added automatically from global_cpu_vendor.
+base_packages:
+  - htop
+  - iotop
+  - ncdu
+  - tmux
+  - vim
+  - jq
+  - rsync
+  - curl
+  - lm-sensors
+extra_packages: [] # per-host additions in host_vars/<host>/main.yml

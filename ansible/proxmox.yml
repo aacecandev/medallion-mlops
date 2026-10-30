@@ -18,6 +18,11 @@
         name: 03_prepare_repos
       tags: [repos]
 
+    - name: Base packages
+      ansible.builtin.import_role:
+        name: 04_install_software
+      tags: [packages]
+
     - name: SSH server
       ansible.builtin.import_role:
         name: 05_init_sshd

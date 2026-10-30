@@ -118,7 +118,12 @@ chain; content verified identical).
       condition is only checked at start). Proof: `:9100/metrics` reachable from the controller on both
       hosts (~4k lines), ZFS metrics on both, SMART on nas HDDs, NVMe health on both (39/20 series),
       `node_reboot_required` present, rerun `changed=0`. Route: inline.
-- [ ] T14+ Roles common to both hosts: 04 packages, 27 backups. Later feature: monitoring stack + pve-exporter. one at a time (order agreed with the user), each with per-host values where they differ.
+- [x] T14 `04_install_software` (user-approved list): `base_packages` (htop, iotop, ncdu, tmux, vim, jq,
+      rsync, curl, lm-sensors) + per-host `extra_packages` + CPU microcode from `global_cpu_vendor`
+      (`intel-microcode` on both). Dropped clone's benchmark/IPMI/cpupower/lockfile-progs and duplicates
+      handled by other roles. Proof: 10/10 installed on both, rerun `changed=0`; microcode loads at next boot
+      (no reboot flag set). Route: inline.
+- [ ] T15+ Roles common to both hosts: 27 backups. Later feature: monitoring stack + pve-exporter. one at a time (order agreed with the user), each with per-host values where they differ.
 
 ## Progress
 
