@@ -85,3 +85,6 @@ pc_backup_snapshots: # sanoid retention
   daily: 7
   weekly: 4
   monthly: 6
+
+# 27_backup_jobs: Proxmox backup jobs per host in host_vars.
+pve_backup_jobs: []

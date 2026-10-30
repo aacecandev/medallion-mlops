@@ -58,6 +58,11 @@
         name: 26_nfs_storage
       tags: [nfs]
 
+    - name: Backup jobs
+      ansible.builtin.import_role:
+        name: 27_backup_jobs
+      tags: [backups]
+
     - name: Node exporter
       ansible.builtin.import_role:
         name: 28_node_exporter

@@ -1,0 +1,51 @@
+# Proxmox-native backup jobs (vzdump, stored in /etc/pve/jobs.cfg) for hosts
+# with pve_backup_jobs: missing jobs are created, drifted options are set.
+# Option values are strings exactly as pvesh takes them; a dict-valued option
+# such as prune-backups is compared as sorted "key=value" pairs.
+- name: List Proxmox backup jobs
+  ansible.builtin.command: pvesh get /cluster/backup --output-format json
+  register: backup_jobs_current
+  changed_when: false
+  check_mode: false
+  when: pve_backup_jobs | length > 0
+
+- name: Create Proxmox backup jobs
+  ansible.builtin.command:
+    argv: "{{ ['pvesh', 'create', '/cluster/backup', '--id', item.id] + backup_job_args | from_yaml }}"
+  loop: "{{ pve_backup_jobs }}"
+  loop_control:
+    label: "{{ item.id }}"
+  when: item.id not in (backup_jobs_current.stdout | from_json | map(attribute='id'))
+  changed_when: true
+  vars:
+    backup_job_args: |-
+      {% set args = [] %}
+      {% for key, value in item.options.items() %}
+      {%   set _ = args.extend(['--' ~ key, value | string]) %}
+      {% endfor %}
+      {{ args | to_json }}
+
+- name: Update drifted backup job options
+  ansible.builtin.command:
+    argv: "{{ ['pvesh', 'set', '/cluster/backup/' ~ item.id] + backup_job_drift | from_yaml }}"
+  loop: "{{ pve_backup_jobs }}"
+  loop_control:
+    label: "{{ item.id }}"
+  when:
+    - item.id in (backup_jobs_current.stdout | from_json | map(attribute='id'))
+    - backup_job_drift | from_yaml | length > 0
+  changed_when: true
+  vars:
+    backup_job_current: "{{ backup_jobs_current.stdout | from_json | selectattr('id', 'eq', item.id) | first | default({}) }}"
+    backup_job_drift: |-
+      {% set args = [] %}
+      {% for key, value in item.options.items() %}
+      {%   set current = backup_job_current.get(key) %}
+      {%   if current is mapping %}
+      {%     set current = current | dictsort | map('join', '=') | join(',') %}
+      {%   endif %}
+      {%   if current | string != value | string %}
+      {%     set _ = args.extend(['--' ~ key, value | string]) %}
+      {%   endif %}
+      {% endfor %}
+      {{ args | to_json }}

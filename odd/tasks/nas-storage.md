@@ -54,7 +54,14 @@ Strategy: `ask-on-risk`. Branch `feat/nas-storage` from `origin/main`.
       `exportfs -v` shows one client; beelink `pvesm status` active 10.4T, `findmnt` nfs4 from the NAS, root
       write test owned by root; rerun `changed=0`. Note: first run failed on the missing exports dir and
       `pvesm add` then failed (nothing added). Route: inline.
-- [ ] T5 Proxmox backup jobs (vzdump) to the NAS storage, with retention (beelink guests only; small).
+- [x] T5 `27_backup_jobs` (user-approved: replaces the clone's same-host scripts): beelink job `nightly-guests`
+      in `/etc/pve/jobs.cfg`: all guests, 02:00, snapshot, zstd, `nas-backups`, prune keep-daily 7 /
+      weekly 4 / monthly 6, `legacy-sendmail` + `mailnotification failure` to root (per-job failure mail
+      without changing `default-matcher`, which routes all other notifications). Creates missing jobs,
+      sets drifted options (dict options compared as sorted key=value). Proof: rerun `changed=0`;
+      manual drift (`compress lzo`) corrected to zstd; forced failing `vzdump 9999` with the same
+      notification options -> "notified via target <root>" -> Postfix `status=sent (250`. No guests yet,
+      so no real archive tested. Route: inline.
 - [x] T6 Workstation backup (user decision: rsync + ZFS snapshots, not vzdump/PBS; data 7.4 TB on NTFS,
       rarely changing): inventory groups `proxmox`, `workstations` (asuspc, local connection),
       `pc_backup_target` (nas); `proxmox.yml` now targets `proxmox` only. `pc-backup.yml` + `40_pc_backup`:
@@ -76,4 +83,4 @@ Strategy: `ask-on-risk`. Branch `feat/nas-storage` from `origin/main`.
 
 ## Next step
 
-T5 (vzdump backup job to `nas-backups` with retention).
+Check the first workstation sync and first sanoid snapshot; then PR for `feat/nas-storage`.
