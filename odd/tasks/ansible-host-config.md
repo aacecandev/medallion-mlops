@@ -67,8 +67,11 @@ Strategy: `ask-on-risk`. Forecast: well over 400 authored lines across all roles
 - Review assessment `main..HEAD` (untracked excluded): medium, 184 lines, `under_budget`; pending in slice.
 
 - T4: `ansible-lint` passed; `--check --diff`: 2 changes per host (drop-in + reload). Before: both hosts
-  `permitrootlogin yes`, `passwordauthentication yes`. Pending: real run (user approval).
+  `permitrootlogin yes`, `passwordauthentication yes`. Real run (by the user) applied the drop-in on both
+  hosts but the verify assert failed: `sshd -T` prints `prohibit-password` as `without-password`. Fixed
+  the assert; rerun `changed=0 failed=0`. Effective: `permitrootlogin without-password`,
+  `passwordauthentication no`, `kbdinteractiveauthentication no`, `x11forwarding no`.
 
 ## Next step
 
-Real run of `05_init_sshd` once approved (keep a root session open), then `06_configure_users`.
+Port `06_configure_users` (admin user; API tokens scope to agree).

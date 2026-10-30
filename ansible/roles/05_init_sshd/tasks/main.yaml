@@ -18,10 +18,11 @@
   changed_when: false
   check_mode: false
 
+# sshd -T reports prohibit-password under its legacy name without-password.
 - name: Verify effective sshd settings
   ansible.builtin.assert:
     that:
-      - "'permitrootlogin ' ~ sshd_permit_root_login in sshd_effective.stdout_lines"
+      - "'permitrootlogin ' ~ (sshd_permit_root_login | replace('prohibit-password', 'without-password')) in sshd_effective.stdout_lines"
       - "'passwordauthentication ' ~ ('yes' if sshd_password_authentication else 'no') in sshd_effective.stdout_lines"
     quiet: true
   when: not ansible_check_mode
