@@ -37,7 +37,7 @@ Strategy: `ask-on-risk`. Forecast: well over 400 authored lines across all roles
 ## Tasks
 
 - [x] T1 `ansible/requirements.yml` for `ansible.posix` and `community.general`. Route: inline.
-- [ ] T2 Base layout + `00_init`: move shared vars to `group_vars/all.yml`, drop `vars_file`/`include_vars`
+- [x] T2 Base layout + `00_init`: move shared vars to `group_vars/all.yml`, drop `vars_file`/`include_vars`
       and `ansible_ssh_pass`, use facts for CPU vendor. Route: inline.
 - [ ] T3+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
 
@@ -45,6 +45,8 @@ Strategy: `ask-on-risk`. Forecast: well over 400 authored lines across all roles
 
 - Branch `feat/ansible-host-config` created from `main`.
 - `ansible all -m ping` succeeded on both hosts.
+- T1 committed `9795a00`. T2: `ansible-lint` passed (production profile), `--syntax-check` passed; not yet run against the hosts.
+- User copied roles 02, 05, 06, 13, 18 into `ansible/roles`; excluded from lint until ported.
 
 ## Next step
 
