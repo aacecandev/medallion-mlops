@@ -22,6 +22,16 @@ repos:
           - --fix=lf
       - id: trailing-whitespace
 
+  # Runs from ansible/ so it picks up ansible/.ansible-lint and ansible.cfg;
+  # collections come from ansible/requirements.yml.
+  - repo: https://github.com/ansible/ansible-lint
+    rev: v26.10.1
+    hooks:
+      - id: ansible-lint
+        entry: sh -c 'cd ansible && ansible-lint'
+        files: ^ansible/
+        always_run: false
+
   - repo: local
     hooks:
       - id: gitleaks

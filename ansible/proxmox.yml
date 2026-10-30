@@ -1,0 +1,14 @@
+- name: Prepare proxmox
+  hosts: all
+  tasks:
+    - name: Init
+      ansible.builtin.include_role:
+        name: 00_init
+
+    - name: Date and timezone
+      ansible.builtin.include_role:
+        name: 02_date_timezone
+
+    - name: SSH server
+      ansible.builtin.include_role:
+        name: 05_init_sshd
