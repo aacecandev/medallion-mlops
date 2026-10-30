@@ -1,0 +1,13 @@
+# Dedicated, passphrase-less key for the unattended job. It can only write into
+# the backup dataset on the NAS (rrsync -wo forced command), never read or shell.
+- name: Create backup SSH key
+  ansible.builtin.command: >-
+    ssh-keygen -t ed25519 -N "" -C "pc-backup@{{ inventory_hostname }}"
+    -f {{ pc_backup_key_path }}
+  args:
+    creates: "{{ pc_backup_key_path }}"
+
+- name: Read backup public key
+  ansible.builtin.slurp:
+    src: "{{ pc_backup_key_path }}.pub"
+  register: pc_backup_pubkey

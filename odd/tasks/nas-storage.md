@@ -54,7 +54,17 @@ Strategy: `ask-on-risk`. Branch `feat/nas-storage` from `origin/main`.
       `exportfs -v` shows one client; beelink `pvesm status` active 10.4T, `findmnt` nfs4 from the NAS, root
       write test owned by root; rerun `changed=0`. Note: first run failed on the missing exports dir and
       `pvesm add` then failed (nothing added). Route: inline.
-- [ ] T5 Proxmox backup jobs (vzdump) to the NAS storage, with retention.
+- [ ] T5 Proxmox backup jobs (vzdump) to the NAS storage, with retention (beelink guests only; small).
+- [ ] T6 Workstation backup (user decision: rsync + ZFS snapshots, not vzdump/PBS; data 7.4 TB on NTFS,
+      rarely changing): inventory groups `proxmox`, `workstations` (asuspc, local connection),
+      `pc_backup_target` (nas); `proxmox.yml` now targets `proxmox` only. `pc-backup.yml` + `40_pc_backup`:
+      dedicated ed25519 key on the PC; NAS user `pc-backup` owns `datapool/data/pc` (recordsize 1M), key
+      restricted to `rrsync -wo` (write-only, no shell); sanoid daily 7 / weekly 4 / monthly 6; systemd user
+      service + timer 01:30 (`Persistent`, `ConditionPathIsMountPoint` so an unmounted disk never syncs an
+      empty tree with `--delete`), `rsync -rt --delete` (NTFS: no POSIX owners), NAS host key pinned from
+      `ansible/known_hosts`, linger for logged-out runs. Done: lint passes, dataset created on nas.
+      Pending: real run by the user (auto-mode classifier blocks persistence on the workstation); first
+      full sync (~7.4 TB) starts at the first timer run.
 
 ## Progress
 

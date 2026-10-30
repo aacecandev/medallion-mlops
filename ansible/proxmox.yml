@@ -1,7 +1,7 @@
 # Run one role with --tags, e.g. ansible-playbook proxmox.yml --tags sshd
 # (init always runs, later roles depend on its facts).
 - name: Prepare proxmox
-  hosts: all
+  hosts: proxmox
   tasks:
     - name: Init
       ansible.builtin.import_role:
@@ -76,7 +76,7 @@
 # Opt-in only: ansible-playbook proxmox.yml --tags upgrade [--limit <host>]
 # Full upgrade plus reboot if needed, one host at a time.
 - name: Upgrade packages
-  hosts: all
+  hosts: proxmox
   serial: 1
   tasks:
     - name: Upgrade and reboot

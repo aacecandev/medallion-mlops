@@ -1,0 +1,30 @@
+# Nightly backup of the workstation data disk to the NAS:
+#   ansible-playbook pc-backup.yml
+- name: Backup key on the workstation
+  hosts: workstations
+  vars: &pc_backup_paths
+    pc_backup_key_path: "{{ ansible_facts['env']['HOME'] }}/.ssh/nas-pc-backup_ed25519"
+    pc_backup_known_hosts: "{{ ansible_facts['env']['HOME'] }}/.ssh/known_hosts.d/pc-backup"
+    pc_backup_target_host: "{{ groups['pc_backup_target'] | first }}"
+  tasks:
+    - name: Create backup key
+      ansible.builtin.import_role:
+        name: 40_pc_backup
+        tasks_from: client_key.yaml
+
+- name: Backup target on the NAS
+  hosts: pc_backup_target
+  tasks:
+    - name: Prepare backup target
+      ansible.builtin.import_role:
+        name: 40_pc_backup
+        tasks_from: target.yaml
+
+- name: Backup job on the workstation
+  hosts: workstations
+  vars: *pc_backup_paths
+  tasks:
+    - name: Install backup timer
+      ansible.builtin.import_role:
+        name: 40_pc_backup
+        tasks_from: client.yaml

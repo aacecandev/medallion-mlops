@@ -1,0 +1,11 @@
+# Managed by Ansible (40_pc_backup).
+[Unit]
+Description=Nightly backup of {{ pc_backup_source }}
+
+[Timer]
+OnCalendar={{ pc_backup_schedule }}
+# Runs at the next boot if the PC was off at that time.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

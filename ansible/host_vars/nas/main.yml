@@ -26,6 +26,9 @@ zfs_datasets:
     properties:
       recordsize: 1M # large sequential vzdump archives
   - name: datapool/data
+  - name: datapool/data/pc
+    properties:
+      recordsize: 1M # large media files from the PC's NTFS disk
 zfs_arc_max_bytes: 3221225472 # 3 GiB of 7 GiB RAM
 
 # 26_nfs_storage: backups dataset for beelink only. no_root_squash because

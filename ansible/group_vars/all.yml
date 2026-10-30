@@ -70,3 +70,18 @@ smartd_temp_crit: 55
 # 26_nfs_storage: exports and Proxmox NFS storages per host in host_vars.
 nfs_exports: []
 pve_nfs_storages: []
+
+# 40_pc_backup (pc-backup.yml): nightly rsync of the PC's data disk to the NAS,
+# versioned there with sanoid snapshots. Target host: inventory group pc_backup_target.
+pc_backup_source: /mnt/external-data
+pc_backup_dataset: datapool/data/pc
+pc_backup_user: pc-backup
+pc_backup_schedule: "*-*-* 01:30:00"
+pc_backup_excludes:
+  - "$RECYCLE.BIN/"
+  - "System Volume Information/"
+  - ".Trash-*/"
+pc_backup_snapshots: # sanoid retention
+  daily: 7
+  weekly: 4
+  monthly: 6

@@ -1,0 +1,50 @@
+# Receiving side on the NAS: an unprivileged user owning the dataset, the PC's
+# key restricted to rrsync, and sanoid snapshots for versions.
+- name: Create backup user
+  ansible.builtin.user:
+    name: "{{ pc_backup_user }}"
+    system: true
+    home: /var/lib/{{ pc_backup_user }}
+    shell: /bin/sh # needed to run the forced command
+    password: "!"
+
+- name: Require the backup dataset
+  ansible.builtin.command: zfs list -H -o mountpoint {{ pc_backup_dataset }}
+  register: pc_backup_mountpoint
+  changed_when: false
+  check_mode: false
+
+- name: Give the backup user the dataset
+  ansible.builtin.file:
+    path: "{{ pc_backup_mountpoint.stdout }}"
+    owner: "{{ pc_backup_user }}"
+    group: "{{ pc_backup_user }}"
+    mode: "0750"
+
+- name: Authorize the PC key for rrsync only
+  ansible.posix.authorized_key:
+    user: "{{ pc_backup_user }}"
+    key: "{{ hostvars[item].pc_backup_pubkey.content | b64decode | trim }}"
+    key_options: restrict,command="/usr/bin/rrsync -wo {{ pc_backup_mountpoint.stdout }}"
+    exclusive: true
+  loop: "{{ groups['workstations'] }}"
+
+- name: Install sanoid
+  ansible.builtin.apt:
+    name: sanoid
+    state: present
+
+- name: Configure sanoid snapshots
+  ansible.builtin.template:
+    src: sanoid.conf.j2
+    dest: /etc/sanoid/sanoid.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure sanoid timer is running
+  ansible.builtin.systemd_service:
+    name: sanoid.timer
+    state: started
+    enabled: true
+  ignore_errors: "{{ ansible_check_mode }}"

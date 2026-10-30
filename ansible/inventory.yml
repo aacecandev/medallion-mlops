@@ -1,8 +1,19 @@
 all:
-  hosts:
-    beelink:
-      ansible_host: 192.168.1.200
-      ansible_user: root
-    nas:
-      ansible_host: 192.168.1.138
-      ansible_user: root
+  children:
+    proxmox:
+      hosts:
+        beelink:
+          ansible_host: 192.168.1.200
+          ansible_user: root
+        nas:
+          ansible_host: 192.168.1.138
+          ansible_user: root
+    # The controller itself; configured as the logged-in user, no SSH, no sudo.
+    workstations:
+      hosts:
+        asuspc:
+          ansible_connection: local
+    # Receives the workstation backups (pc-backup.yml).
+    pc_backup_target:
+      hosts:
+        nas:

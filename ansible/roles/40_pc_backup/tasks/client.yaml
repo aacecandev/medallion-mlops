@@ -1,0 +1,45 @@
+# Runs as the logged-in user: the NTFS disk is mounted uid=1000, so no root.
+- name: Create known_hosts directory for the backup job
+  ansible.builtin.file:
+    path: "{{ pc_backup_known_hosts | dirname }}"
+    state: directory
+    mode: "0700"
+
+- name: Pin the NAS host key
+  ansible.builtin.known_hosts:
+    path: "{{ pc_backup_known_hosts }}"
+    name: "{{ hostvars[pc_backup_target_host].ansible_host }}"
+    key: "{{ lookup('ansible.builtin.file', inventory_dir ~ '/known_hosts') | split('\n')
+             | select('match', '^' ~ hostvars[pc_backup_target_host].ansible_host ~ ' ') | first }}"
+
+- name: Create systemd user unit directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/systemd/user"
+    state: directory
+    mode: "0755"
+
+- name: Install backup service and timer
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/systemd/user/{{ item }}"
+    mode: "0644"
+  loop:
+    - pc-backup.service
+    - pc-backup.timer
+  notify: Reload user systemd
+
+- name: Apply unit changes now
+  ansible.builtin.meta: flush_handlers
+
+# Lets the timer fire while the user is logged out.
+- name: Keep user services running without a login session
+  ansible.builtin.command: loginctl enable-linger
+  args:
+    creates: /var/lib/systemd/linger/{{ ansible_facts['user_id'] }}
+
+- name: Enable backup timer
+  ansible.builtin.systemd_service:
+    name: pc-backup.timer
+    scope: user
+    state: started
+    enabled: true
