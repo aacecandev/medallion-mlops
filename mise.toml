@@ -178,6 +178,28 @@ host="${usage_host:?usage: mise run pve-iso -- beelink|nas}"
 sops -d secrets.sops.env | scripts/build-iso.sh "${host}"
 """
 
+[tasks.golden-image-validate]
+description = "Validate the Ubuntu 24.04 golden image Packer config (secrets from secrets.sops.env)"
+dir = "{{config_root}}/images/proxmox-golden-image"
+# validate never calls the Proxmox API, so the token can be a placeholder.
+run = """
+set -euo pipefail
+packer init .
+PKR_VAR_proxmox_token=unused sops exec-env secrets.sops.env 'packer validate .'
+"""
+
+[tasks.golden-image]
+description = "Build the Ubuntu 24.04 golden image template on beelink (token from the 06_configure_users secrets)"
+depends = ["golden-image-validate"]
+dir = "{{config_root}}/images/proxmox-golden-image"
+run = """
+set -euo pipefail
+PKR_VAR_proxmox_token="$(sops decrypt --extract '["pve_token_secrets"]["packer@pve!packer"]' \
+  {{config_root}}/ansible/host_vars/beelink/pve_tokens.sops.yml)"
+export PKR_VAR_proxmox_token
+sops exec-env secrets.sops.env 'packer build .'
+"""
+
 [tasks.pve-usb]
 description = "Write a host's prepared Proxmox ISO to a USB stick (builds it if missing), e.g. mise run pve-usb -- beelink /dev/sdX (erases the stick)"
 depends = ["aia-build"]

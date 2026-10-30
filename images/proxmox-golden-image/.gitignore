@@ -1,0 +1,10 @@
+# Secrets live only in secrets.sops.env (encrypted); never commit a
+# decrypted copy or a plaintext var file.
+*.pkrvars.hcl
+!variables.auto.pkrvars.hcl
+*.dec
+*.agekey
+
+# Packer cache and build artifacts
+packer_cache/
+crash.log

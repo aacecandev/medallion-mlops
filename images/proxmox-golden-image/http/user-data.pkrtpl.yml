@@ -1,0 +1,57 @@
+#cloud-config
+# Ubuntu autoinstall config, rendered by packer.pkr.hcl with templatefile()
+# and served from memory through http_content, so the password hash never
+# lands on disk unencrypted.
+autoinstall:
+  version: 1
+  interactive-sections: []
+  locale: es_ES.UTF-8
+  keyboard:
+    layout: es
+  network:
+    version: 2
+    ethernets:
+      primary:
+        match:
+          name: "e*"
+        dhcp4: false
+        addresses:
+          - ${vm_ip}/${vm_prefix}
+        routes:
+          - to: default
+            via: ${vm_gateway}
+        nameservers:
+          addresses:
+%{ for server in vm_dns ~}
+            - ${server}
+%{ endfor ~}
+  identity:
+    hostname: ubuntu-template
+    username: ${username}
+    password: "${password_hash}"
+  ssh:
+    install-server: true
+    allow-pw: true
+    authorized-keys:
+%{ for key in authorized_keys ~}
+      - ${key}
+%{ endfor ~}
+  user-data:
+    disable_root: false
+    locale: es_ES.UTF-8
+    timezone: UTC
+    users:
+      - name: ${username}
+        ssh_authorized_keys:
+%{ for key in authorized_keys ~}
+          - ${key}
+%{ endfor ~}
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        groups: sudo
+        shell: /bin/bash
+  packages:
+    - qemu-guest-agent
+  late-commands:
+    - echo '${username} ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/${username}
+    - chmod 440 /target/etc/sudoers.d/${username}
+    - curtin in-target --target=/target -- locale-gen es_ES.UTF-8
