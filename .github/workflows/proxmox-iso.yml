@@ -1,17 +1,17 @@
 name: proxmox-iso
 
 # Checks that the Proxmox VE answer files validate and that the unattended
-# ISOs can be prepared. Uses FAKE secrets (packer/proxmox-ve-unnatended/ci)
+# ISOs can be prepared. Uses FAKE secrets (images/proxmox-ve-unnatended/ci)
 # and uploads no artifacts: a prepared ISO embeds its answer file in plaintext.
 on:
   pull_request:
     paths:
-      - packer/proxmox-ve-unnatended/**
+      - images/proxmox-ve-unnatended/**
       - .github/workflows/proxmox-iso.yml
   push:
     branches: [main]
     paths:
-      - packer/proxmox-ve-unnatended/**
+      - images/proxmox-ve-unnatended/**
       - .github/workflows/proxmox-iso.yml
   workflow_dispatch: {}
 
@@ -33,7 +33,7 @@ jobs:
         host: [beelink, nas]
     defaults:
       run:
-        working-directory: packer/proxmox-ve-unnatended
+        working-directory: images/proxmox-ve-unnatended
     steps:
       - uses: actions/checkout@v4
 
@@ -44,7 +44,7 @@ jobs:
         id: iso-cache
         uses: actions/cache@v4
         with:
-          path: packer/proxmox-ve-unnatended/${{ env.PVE_ISO_NAME }}
+          path: images/proxmox-ve-unnatended/${{ env.PVE_ISO_NAME }}
           key: pve-iso-${{ env.PVE_ISO_SHA256 }}
 
       - name: Download the stock ISO

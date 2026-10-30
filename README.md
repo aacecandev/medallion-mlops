@@ -69,7 +69,7 @@ installer:
 | `beelink` (mini PC) | VMs / LXC | 2x NVMe, ZFS raid1 |
 | `nas` | File serving | NVMe system disk (ext4); 4 HDDs, data filesystem not decided yet (set up post-install) |
 
-Answer files live in [`packer/proxmox-ve-unnatended`](./packer/proxmox-ve-unnatended).
+Answer files live in [`images/proxmox-ve-unnatended`](./images/proxmox-ve-unnatended).
 
 See [`docs/homelab-topology.excalidraw`](./docs/homelab-topology.excalidraw) for
 the network and storage layout.
@@ -79,7 +79,7 @@ the network and storage layout.
 The whole flow is drawn in
 [`docs/proxmox-install-flow.excalidraw`](./docs/proxmox-install-flow.excalidraw).
 All commands run from the repository root. Paths below are relative to
-`packer/proxmox-ve-unnatended/`.
+`images/proxmox-ve-unnatended/`.
 
 ### 1. Install the tooling
 
@@ -104,13 +104,13 @@ recipient in `.sops.yaml` and the file re-encrypted with `sops updatekeys`.
 
 ```sh
 openssl passwd -6                                    # prints the root password hash
-sops packer/proxmox-ve-unnatended/secrets.sops.env   # set ROOT_PASSWORD_HASHED and MAILTO
+sops images/proxmox-ve-unnatended/secrets.sops.env   # set ROOT_PASSWORD_HASHED and MAILTO
 ```
 
 ### 4. Download the stock Proxmox ISO
 
 ```sh
-cd packer/proxmox-ve-unnatended
+cd images/proxmox-ve-unnatended
 curl -fLO https://enterprise.proxmox.com/iso/proxmox-ve_9.2-1.iso
 echo "4e88fe416df9b527624a175f24c9aa07c714d3332afb1ee3dbf3879573ef2c6c  proxmox-ve_9.2-1.iso" | sha256sum -c -
 cd -
