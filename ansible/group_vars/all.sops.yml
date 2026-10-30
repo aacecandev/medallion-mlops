@@ -1,4 +1,7 @@
 admin_user_password_hash: ENC[AES256_GCM,data:HNHC5yle9WAim6l2z+I10NTlVsuf5vhCCo/jqt+eyYHqtTdUEJLJg7KGyqrExepIfZ3AZmuvGfMnwA7Z2MvEEOEvEBKgLpmKSg==,iv:R99oY3r7MQDHNvrdbKIbtyh3DfUHqkp5KVdhfFQ4zSQ=,tag:nHw+tiR34mEZFwjuuNElvA==,type:str]
+mail_relay_password: ENC[AES256_GCM,data:6fJi3N7W4b3qe4/2BmkVjNcz0Q==,iv:bGFdwk5qEBH8jb59JpyYXVdBS2ewv95fyJCT2dE1Okw=,tag:MBCPhxwNRRMy0xb0ljWrQw==,type:str]
+admin_email: ENC[AES256_GCM,data:CaTlIEzS9kC47xjEWN/F,iv:8zgi37mvrPYK+wCcacyzbZoy29en4/DOrB1Yzp1N0Mc=,tag:ZDQTgAt2bSXFEtW7eGBDEw==,type:str]
+mail_relay_user: ENC[AES256_GCM,data:CWcQ6qldyOdduQ/Th+kB,iv:3JIrPBYrAbF8S9d3ZUisV797gfz3Iq7+pdamY6Vsuyo=,tag:939Lksx85mFkKAxm/SENdg==,type:str]
 sops:
     age:
         - enc: |
@@ -10,7 +13,7 @@ sops:
             1Hj3JWAoXqkmPWkPZYGwnZ+Is5isps+wK+HaAIb8fTq8fASjb1OOGg==
             -----END AGE ENCRYPTED FILE-----
           recipient: age10zgfnnd70a8dg2trsyk4cch8jwt3qttxavgsz43z0t594sj5ssxqx4wh68
-    lastmodified: "2026-10-30T01:33:25Z"
-    mac: ENC[AES256_GCM,data:G8XJUN9DTeVbGRuDXEeedvdWEjgFGC3rS+TGL6XPTrVZ8+FmSBwlwWDgrSSMKKEqsHeKyVYsKiPU16wySNJzZa1HJLgSvSEju3T57Rw0F0pDIyOiutr2ID3Gn4CYM320oQrpL1x3DSIvtarlQwEVW58POFQHFSyYI5maXiZnPz8=,iv:INnDyea/FNIox5b9+8lJ41XCz69r/+tX9iRyfz8JY44=,tag:QMgFteENtIg1/iQyHBHguQ==,type:str]
+    lastmodified: "2026-10-30T02:42:18Z"
+    mac: ENC[AES256_GCM,data:4DrmJsBYFSpRrTWUzsdLRAgpCYt3anzk+ApgdgvR7rygyh8Q9ZEEdzVz+HHjaH7d3E0zmI0+6tZYTpw8Bsk1tSVm8Nc72j1v/RvSZ3oMQtFSuhoNfSZh2hS2yOFWsJhngAFSg/XLe+EtNmXmdHtNq/C9lAq67DVhOSGoeL9F2Tk=,iv:rdDo/LE71G7fj9qfImnPDVOOtvLRtU9pfCcFIfKV8qI=,tag:xJtYCVGwh8qlO93NFcpQsA==,type:str]
     unencrypted_suffix: _unencrypted
     version: 3.13.3

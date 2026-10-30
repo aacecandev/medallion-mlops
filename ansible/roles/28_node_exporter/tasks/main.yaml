@@ -1,0 +1,29 @@
+# Host metrics on :9100 for a future Prometheus. Debian packages, so the
+# unattended security updates cover them. The collectors package adds systemd
+# timers writing textfile metrics: apt updates pending, SMART for SATA/SAS disks
+# (smartctl) and NVMe health (nvme-cli).
+- name: Install node exporter
+  ansible.builtin.apt:
+    name:
+      - prometheus-node-exporter
+      - prometheus-node-exporter-collectors
+      - nvme-cli
+    state: present
+    install_recommends: false
+
+- name: Ensure node exporter is running
+  ansible.builtin.systemd_service:
+    name: prometheus-node-exporter
+    state: started
+    enabled: true
+  # In check mode on a fresh host the package (and its unit) is not installed yet.
+  ignore_errors: "{{ ansible_check_mode }}"
+
+# The timer's ConditionPathExistsGlob is only checked when it starts, so it
+# stays inactive if nvme-cli arrived after boot.
+- name: Start NVMe metrics timer
+  ansible.builtin.systemd_service:
+    name: prometheus-node-exporter-nvme.timer
+    state: started
+  when: ansible_facts['devices'].keys() | select('match', '^nvme') | list | length > 0
+  ignore_errors: "{{ ansible_check_mode }}"
