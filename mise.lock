@@ -49,6 +49,11 @@ url = "https://github.com/FiloSottile/age/releases/download/v1.3.2/age-v1.3.2-wi
 url_api = "https://api.github.com/repos/FiloSottile/age/releases/assets/535541937"
 provenance = "github-attestations"
 
+[[tools.ansible-core]]
+version = "2.21.5"
+backend = "pypi:ansible-core"
+specifiers = ["2.21.5"]
+
 [[tools.cilium-cli]]
 version = "0.19.5"
 backend = "aqua:cilium/cilium-cli"
@@ -234,6 +239,14 @@ url = "https://releases.hashicorp.com/packer/1.16.2/packer_1.16.2_darwin_amd64.z
 [tools.packer."platforms.windows-x64"]
 checksum = "sha256:1b3984ae7f5954cc3ae416b527ae5c5a747ea7bb7977366038609199be4a2710"
 url = "https://releases.hashicorp.com/packer/1.16.2/packer_1.16.2_windows_amd64.zip"
+
+[[tools."pipx:ansible-lint"]]
+version = "26.10.1"
+backend = "pipx:ansible-lint"
+specifiers = ["26.10.1"]
+
+[tools."pipx:ansible-lint".options]
+uvx_args = "--with ansible-core==2.21.5"
 
 [[tools.pre-commit]]
 version = "4.7.0"

@@ -1,0 +1,14 @@
+# Downloads installer ISOs from upstream straight into Proxmox's `local` ISO
+# storage, where Packer's boot_iso finds them. The pinned checksum verifies the
+# image and turns reruns into a no-op once the file is present.
+- name: Download ISOs to Proxmox ISO storage
+  ansible.builtin.get_url:
+    url: "{{ item.url }}"
+    dest: /var/lib/vz/template/iso/{{ item.url | basename }}
+    checksum: "{{ item.checksum }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ pve_isos }}"
+  loop_control:
+    label: "{{ item.url | basename }}"

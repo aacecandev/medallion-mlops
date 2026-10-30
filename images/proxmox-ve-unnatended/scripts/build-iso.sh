@@ -3,7 +3,7 @@
 # format), validate it and, unless --validate-only is given, embed it into
 # the stock Proxmox VE ISO.
 #
-# Usage (from packer/proxmox-ve-unnatended):
+# Usage (from images/proxmox-ve-unnatended):
 #   sops -d secrets.sops.env | scripts/build-iso.sh <host> [--validate-only]
 #   scripts/build-iso.sh <host> [--validate-only] < ci/secrets.ci.env
 #

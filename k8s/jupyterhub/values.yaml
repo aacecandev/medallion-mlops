@@ -31,7 +31,7 @@ proxy:
 
 singleuser:
   # Custom image with the EDA/S3 libraries (pandas, pyarrow, s3fs, duckdb)
-  # baked in. Built from images/jupyter-singleuser/ and pushed to GHCR by
+  # baked in. Built from docker/jupyter-singleuser/ and pushed to GHCR by
   # .github/workflows/jupyter-singleuser.yml. Bump the tag when the image
   # changes so ArgoCD rolls it. The GHCR package must be public (or add
   # singleuser.image.pullSecrets) for the node to pull it.

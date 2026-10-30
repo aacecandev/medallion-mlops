@@ -37,6 +37,30 @@
 - name: API tokens
   ansible.builtin.include_tasks: tokens.yaml
 
+- name: List Proxmox roles
+  ansible.builtin.command: pveum role list --output-format json
+  register: pveum_roles
+  changed_when: false
+  check_mode: false
+
+# Roles must exist before the ACLs below reference them; modify replaces the privilege set.
+- name: Create or update custom Proxmox roles
+  ansible.builtin.command: >-
+    pveum role {{ 'modify' if current is not none else 'add' }} {{ item.name }}
+    --privs {{ item.privs | sort | join(',') }}
+  loop: "{{ pve_custom_roles }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: current is none or current_privs | sort != item.privs | sort
+  changed_when: true
+  vars:
+    current: >-
+      {{ pveum_roles.stdout | from_json | selectattr('roleid', 'eq', item.name) | first | default(none) }}
+    # pveum reports privs as a comma-separated string; accept a list too.
+    current_privs: >-
+      {{ [] if current is none
+         else (current.privs.split(',') if current.privs is string else current.privs) }}
+
 - name: List Proxmox ACLs
   ansible.builtin.command: pveum acl list --output-format json
   register: pveum_acls

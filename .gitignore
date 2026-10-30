@@ -1,3 +1,22 @@
 .atl/
 temp/
 ansible/.ansible/
+
+# Packer secrets file (DO NOT COMMIT)
+secrets.auto.pkrvars.hcl
+
+# Age encryption key (DO NOT COMMIT)
+*.agekey
+age.agekey
+
+# Legacy secrets file (typo in original)
+variables.auto.pkvars.hcl
+
+# Packer cache and build artifacts
+packer_cache/
+*.box
+crash.log
+
+# OS files
+.DS_Store
+Thumbs.db
