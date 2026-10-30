@@ -41,7 +41,8 @@ chain; content verified identical).
 | Tracker | `feat/ansible-host-config` | `main` | empty tracker commit; draft, no-merge until chain done | 0 |
 | 01 | `feat/ansible-host-config-01-base` | tracker | T1–T4: requirements, `00_init`, `02_date_timezone`, `05_init_sshd` | 245 |
 | 02 | `feat/ansible-host-config-02-users` | 01 | T5: sops vars, `06_configure_users`, service users, API tokens | 241 |
-| 03 | `feat/ansible-host-config-03-services` | 02 | T6+: `13_ksmtuned`, next roles | in progress |
+| 03 | `feat/ansible-host-config-03-services` | 02 | T6–T8: `13_ksmtuned`, hardening, `18_fail2ban` (#15) | 179 |
+| 04 | `feat/ansible-host-config-04-common` | 03 | T9+: tool pinning, common roles | in progress |
 
 ## Tasks
 
@@ -90,7 +91,11 @@ chain; content verified identical).
       `ignoreregex = .` ignored every line so the proxmox jail could never ban. Vars: bantime 1h, findtime 10m,
       maxretry 5, ignoreip localhost only. Proof: jails `proxmox, sshd` on both hosts, rerun `changed=0`;
       one test login failure on nas counted (`Found 192.168.1.37`, IPv4-normalised). Route: inline.
-- [ ] T9+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
+- [x] T9 Tooling pinned in `mise.toml`: `ansible-core` 2.21.5, `pipx:ansible-lint` 26.10.1 (same as the
+      pre-commit hook) with the same `ansible-core` in its venv; `mise run ansible-deps` installs
+      `requirements.yml` (mise's ansible-core does not see Debian's bundled collections). Proof: lint passes,
+      `--check` on both hosts `changed=0`. Route: inline.
+- [ ] T10+ Roles common to both hosts (user scope): candidates from the clone. one at a time (order agreed with the user), each with per-host values where they differ.
 
 ## Progress
 
