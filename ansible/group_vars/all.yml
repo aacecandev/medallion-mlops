@@ -3,3 +3,7 @@
 timezone: Europe/Madrid
 ntp_servers:
   - es.pool.ntp.org
+
+# 05_init_sshd: root stays reachable with keys only (Ansible and Proxmox tooling use it)
+sshd_permit_root_login: prohibit-password
+sshd_password_authentication: false

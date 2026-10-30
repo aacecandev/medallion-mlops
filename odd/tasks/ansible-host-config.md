@@ -42,7 +42,12 @@ Strategy: `ask-on-risk`. Forecast: well over 400 authored lines across all roles
 - [x] T3 `02_date_timezone`: `community.general.timezone`, NTP pool in `/etc/chrony/sources.d/ntp-pool.sources`
       (Debian layout), reload sources instead of restart; dropped unused offset probe and forced `makestep`.
       Shared values in `group_vars/all.yml`. Route: inline.
-- [ ] T4+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
+- [x] T4 `05_init_sshd`: drop-in `/etc/ssh/sshd_config.d/10-hardening.conf` validated with `sshd -t`,
+      reload (not restart), assert effective `sshd -T` values. Policy (user decision): root with keys only
+      (`prohibit-password`), password auth off, port 22. Dropped clone's PAM edits (pam_limits/pam_env
+      off would break limits and locale), `AddressFamily inet`, and defaults-only lines. Route: inline.
+- [ ] T5 `06_configure_users`: user's own admin user (and possibly Proxmox API tokens; scope to agree).
+- [ ] T6+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
 
 ## Progress
 
@@ -61,6 +66,9 @@ Strategy: `ask-on-risk`. Forecast: well over 400 authored lines across all roles
   rerun `changed=0`; `chronyc sources` shows `es.pool.ntp.org` servers synced.
 - Review assessment `main..HEAD` (untracked excluded): medium, 184 lines, `under_budget`; pending in slice.
 
+- T4: `ansible-lint` passed; `--check --diff`: 2 changes per host (drop-in + reload). Before: both hosts
+  `permitrootlogin yes`, `passwordauthentication yes`. Pending: real run (user approval).
+
 ## Next step
 
-Port `05_init_sshd` (lockout risk: keep an open root session while applying).
+Real run of `05_init_sshd` once approved (keep a root session open), then `06_configure_users`.
