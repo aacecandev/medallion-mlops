@@ -1,0 +1,9 @@
+---
+# Install with: ansible-galaxy collection install -r requirements.yml
+collections:
+  - name: ansible.posix # mount, authorized_key
+    version: ">=2.2.0,<3.0.0"
+  - name: community.general # archive
+    version: ">=12.0.0,<14.0.0"
+  - name: community.sops # vars plugin for *.sops.yml in group_vars/host_vars
+    version: ">=2.0.0,<3.0.0"

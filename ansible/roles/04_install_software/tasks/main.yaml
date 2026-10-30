@@ -1,0 +1,8 @@
+# Base admin tooling on every host, plus optional per-host extras.
+# intel-microcode/amd64-microcode come from Debian non-free-firmware and load at boot.
+- name: Install base packages
+  ansible.builtin.apt:
+    name: "{{ base_packages + extra_packages + [microcode_package] }}"
+    state: present
+  vars:
+    microcode_package: "{{ 'amd64-microcode' if global_cpu_vendor == 'AuthenticAMD' else 'intel-microcode' }}"

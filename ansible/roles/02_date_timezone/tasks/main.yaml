@@ -1,0 +1,26 @@
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ timezone }}"
+
+- name: Remove default pool lines from chrony config
+  ansible.builtin.lineinfile:
+    path: /etc/chrony/chrony.conf
+    regexp: '^pool '
+    state: absent
+  notify: Reload chrony sources
+
+# Debian's chrony.conf reads *.sources files from /etc/chrony/sources.d
+- name: Configure NTP pool servers
+  ansible.builtin.template:
+    src: pool-servers.conf.j2
+    dest: /etc/chrony/sources.d/ntp-pool.sources
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload chrony sources
+
+- name: Ensure chrony is running
+  ansible.builtin.service:
+    name: chrony
+    state: started
+    enabled: true

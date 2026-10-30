@@ -1,0 +1,4 @@
+# Managed by Ansible (13_ksmtuned). Unset keys keep the ksmtuned defaults.
+{% for key, value in ksmtuned_settings | dictsort %}
+{{ key }}={{ value }}
+{% endfor %}

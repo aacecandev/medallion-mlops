@@ -1,0 +1,56 @@
+---
+# 02_date_timezone
+timezone: Europe/Madrid
+ntp_servers:
+  - es.pool.ntp.org
+
+# 05_init_sshd: root stays reachable with keys only (Ansible and Proxmox tooling use it)
+sshd_permit_root_login: prohibit-password
+sshd_password_authentication: false
+
+# 06_configure_users (admin_user_password_hash lives in all.sops.yml)
+admin_user: alejandro
+admin_user_pve_role: Administrator
+admin_user_ssh_keys:
+  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDKwFgVMjJtsFt0vn0AM9Q10RJkgByxevhJY9kRQyH9U cardno:32_247_877
+
+# 06_configure_users: Proxmox-only service users, one privilege-separated token each.
+# Secrets land in host_vars/<host>/pve_tokens.sops.yml as pve_token_secrets["<userid>!<token>"].
+pve_service_users:
+  - userid: terraform@pve
+    comment: OpenTofu/Terraform provider (managed by Ansible)
+    role: Administrator # narrow to a custom role later
+    token: terraform
+  - userid: monitoring@pve
+    comment: Prometheus pve-exporter (managed by Ansible)
+    role: PVEAuditor
+    token: exporter
+
+# 13_ksmtuned: on for VM hosts; override per host in host_vars.
+ksmtuned_enabled: true
+ksmtuned_settings: {} # e.g. {KSM_THRES_COEF: 30}; empty keeps ksmtuned defaults
+
+# 18_fail2ban: bans after maxretry failures within findtime (SSH and Proxmox web/API logins).
+fail2ban_bantime: 1h
+fail2ban_findtime: 10m
+fail2ban_maxretry: 5
+fail2ban_ignoreip: # never banned; recover from a self-ban on the console with: fail2ban-client unban --all
+  - 127.0.0.1/8
+  - ::1
+
+# 22_mail: all host mail relays through Google Workspace.
+# admin_email, mail_relay_user and mail_relay_password live in all.sops.yml.
+mail_relayhost: "[smtp.gmail.com]:587"
+
+# 04_install_software: CPU microcode is added automatically from global_cpu_vendor.
+base_packages:
+  - htop
+  - iotop
+  - ncdu
+  - tmux
+  - vim
+  - jq
+  - rsync
+  - curl
+  - lm-sensors
+extra_packages: [] # per-host additions in host_vars/<host>/main.yml

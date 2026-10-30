@@ -1,0 +1,5 @@
+# Reload keeps open sessions, so a bad config cannot drop the current connection.
+- name: Reload ssh
+  ansible.builtin.systemd_service:
+    name: ssh
+    state: reloaded

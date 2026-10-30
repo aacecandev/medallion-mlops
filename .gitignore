@@ -1,1 +1,3 @@
 .atl/
+temp/
+ansible/.ansible/

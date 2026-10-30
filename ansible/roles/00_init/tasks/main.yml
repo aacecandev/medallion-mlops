@@ -1,0 +1,37 @@
+- name: Set global fact for CPU vendor
+  ansible.builtin.set_fact:
+    global_cpu_vendor: "{{ ansible_facts['processor'][1] }}" # GenuineIntel or AuthenticAMD
+
+- name: Detect boot loader
+  ansible.builtin.shell: >
+    if [ -d /sys/firmware/efi ]; then
+      if ls /boot/efi/EFI/*/grub.cfg >/dev/null 2>&1; then
+        echo efi-grub
+      else
+        echo efi
+      fi
+    else
+      echo bios
+    fi
+  register: boot_mode
+  changed_when: false
+  check_mode: false
+
+- name: Set global fact for boot loader
+  ansible.builtin.set_fact:
+    global_boot_mode: "{{ boot_mode.stdout | trim }}"
+
+- name: Get Proxmox version
+  ansible.builtin.command: pveversion
+  register: proxmox_pveversion_info
+  changed_when: false
+  check_mode: false
+
+- name: Extract Proxmox major version
+  ansible.builtin.set_fact:
+    proxmox_pve_major: "{{ proxmox_pveversion_info.stdout.split('/')[1].split('.')[0] | int }}"
+
+- name: Require Proxmox VE 9
+  ansible.builtin.assert:
+    that: proxmox_pve_major | int == 9
+    fail_msg: "Only Proxmox VE 9 is supported, found: {{ proxmox_pveversion_info.stdout }}"
