@@ -56,8 +56,11 @@ Strategy: `ask-on-risk`. Forecast: well over 400 authored lines across all roles
   facts: both `GenuineIntel`, PVE 9; boot mode beelink `efi` (proxmox-boot-tool), nas `efi-grub`.
 - User copied roles 02, 05, 06, 13, 18 into `ansible/roles`; excluded from lint until ported.
 - T3: `ansible-lint` passed; `--check --diff` on both hosts: 2 changes each (remove Debian pool line,
-  add `es.pool.ntp.org` source), timezone already `Europe/Madrid`. Pending: real run (user approval).
+  add `es.pool.ntp.org` source), timezone already `Europe/Madrid`. Real run approved: config present on
+  both hosts (files dated 02:20, applied just before this session's run, which reported `changed=0`);
+  rerun `changed=0`; `chronyc sources` shows `es.pool.ntp.org` servers synced.
+- Review assessment `main..HEAD` (untracked excluded): medium, 184 lines, `under_budget`; pending in slice.
 
 ## Next step
 
-Real run of `02_date_timezone` once approved, then port `05_init_sshd`.
+Port `05_init_sshd` (lockout risk: keep an open root session while applying).
