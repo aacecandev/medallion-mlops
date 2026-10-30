@@ -95,7 +95,11 @@ chain; content verified identical).
       pre-commit hook) with the same `ansible-core` in its venv; `mise run ansible-deps` installs
       `requirements.yml` (mise's ansible-core does not see Debian's bundled collections). Proof: lint passes,
       `--check` on both hosts `changed=0`. Route: inline.
-- [ ] T10+ Roles common to both hosts (user scope): candidates from the clone. one at a time (order agreed with the user), each with per-host values where they differ.
+- [x] T10 `03_prepare_repos` (deb822): `pve-enterprise` and `ceph` enterprise sources kept with `Enabled: no`,
+      `proxmox.sources` with `pve-no-subscription` (Proxmox keyring); apt cache refreshed on change. Skipped
+      the clone's nag-screen patch (fragile across widget-toolkit updates). Proof: `apt-get update` 0 errors on
+      both hosts (was 401 from enterprise repos), rerun `changed=0`; 191 upgrades pending (not applied). Route: inline.
+- [ ] T11+ Roles common to both hosts (user scope). one at a time (order agreed with the user), each with per-host values where they differ.
 
 ## Progress
 

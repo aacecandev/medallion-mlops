@@ -13,6 +13,11 @@
         name: 02_date_timezone
       tags: [timezone]
 
+    - name: APT repositories
+      ansible.builtin.import_role:
+        name: 03_prepare_repos
+      tags: [repos]
+
     - name: SSH server
       ansible.builtin.import_role:
         name: 05_init_sshd
