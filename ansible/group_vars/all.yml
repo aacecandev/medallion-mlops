@@ -59,3 +59,10 @@ extra_packages: [] # per-host additions in host_vars/<host>/main.yml
 zfs_pools: []
 zfs_datasets: []
 zfs_arc_max_bytes: 0
+
+# 29_smartd: temperature thresholds in C; self-tests in smartd -s syntax
+# (short every Sunday 03:00, long on day 1 of each month 04:00).
+smartd_test_schedule: S/../../7/03|L/../01/./04
+smartd_temp_diff: 4
+smartd_temp_info: 45
+smartd_temp_crit: 55

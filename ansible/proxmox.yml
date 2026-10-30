@@ -58,6 +58,11 @@
         name: 28_node_exporter
       tags: [node_exporter]
 
+    - name: SMART monitoring
+      ansible.builtin.import_role:
+        name: 29_smartd
+      tags: [smartd]
+
     - name: Unattended security updates
       ansible.builtin.import_role:
         name: 99_update_reboot

@@ -41,7 +41,12 @@ Strategy: `ask-on-risk`. Branch `feat/nas-storage` from `origin/main`.
       Debian's `/etc/cron.d/zfsutils-linux` (2nd Sunday, all pools); `zfs-scrub-*` timers left disabled to
       avoid double scrubs. Proof: rerun `changed=0`; manual scrub of `datapool` and `rpool` (0 errors) ->
       zed `scrub_finish` -> Postfix `status=sent (250` via smtp.gmail.com on both. Route: inline.
-- [ ] T3 SMART alerts with `smartd` (mail on failures, periodic self-tests).
+- [x] T3 `29_smartd` (both hosts; user-approved schedule): `/etc/smartd.conf` DEVICESCAN `-a -n standby,q`,
+      self-tests short every Sunday 03:00 and long on day 1 04:00, `-W 4,45,55`, mail via Debian's
+      `smartd-runner` to root; template validated with `smartd -q showtests`. Before: already mailed on SMART
+      failures but scheduled no self-tests and watched no temperature. Proof: monitors beelink 2 NVMe, nas
+      4 SATA + 1 NVMe; `showtests` lists S and L tests per device; one-off `-M test` mail per host
+      `status=sent (250`; rerun `changed=0`. Route: inline.
 - [ ] T4 NFS export on nas + Proxmox storage on beelink.
 - [ ] T5 Proxmox backup jobs (vzdump) to the NAS storage, with retention.
 
@@ -51,4 +56,4 @@ Strategy: `ask-on-risk`. Branch `feat/nas-storage` from `origin/main`.
 
 ## Next step
 
-T3 (smartd).
+T4 (NFS export on nas, Proxmox storage on beelink).

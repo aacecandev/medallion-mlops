@@ -1,0 +1,8 @@
+# Managed by Ansible (29_smartd).
+# All SMART disks (SATA and NVMe), mail through Debian's smartd-runner to root
+# (aliased to the admin address by 22_mail).
+#   -a            health, attributes, error and self-test logs
+#   -n standby,q  do not spin up sleeping disks just to check them
+#   -s            self-test schedule (type/month/day/weekday/hour)
+#   -W            report a {{ smartd_temp_diff }}C jump, info at {{ smartd_temp_info }}C, critical at {{ smartd_temp_crit }}C
+DEVICESCAN -d removable -a -n standby,q -s ({{ smartd_test_schedule }}) -W {{ smartd_temp_diff }},{{ smartd_temp_info }},{{ smartd_temp_crit }} -m root -M exec /usr/share/smartmontools/smartd-runner
