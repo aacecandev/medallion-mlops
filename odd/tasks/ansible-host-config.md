@@ -46,7 +46,10 @@ Strategy: `ask-on-risk`. Forecast: well over 400 authored lines across all roles
       reload (not restart), assert effective `sshd -T` values. Policy (user decision): root with keys only
       (`prohibit-password`), password auth off, port 22. Dropped clone's PAM edits (pam_limits/pam_env
       off would break limits and locale), `AddressFamily inet`, and defaults-only lines. Route: inline.
-- [ ] T5 `06_configure_users`: user's own admin user (and possibly Proxmox API tokens; scope to agree).
+- [ ] T5 `06_configure_users`: admin user `alejandro` (sudo, YubiKey key, PAM realm `Administrator`),
+      password hash in sops-encrypted `group_vars/all.sops.yml`; Proxmox API tokens scope to agree.
+      Done so far: `community.sops` in requirements, `vars_plugins_enabled` in `ansible.cfg`, `.sops.yaml`
+      rule for `ansible/(group|host)_vars/*.sops.y(a)ml`; probe file decrypted via `ansible-inventory`.
 - [ ] T6+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
 
 ## Progress
