@@ -112,7 +112,13 @@ chain; content verified identical).
       `group_vars/all.sops.yml` (public repo). Clone issues avoided: full main.cf overwrite, `backup: true`
       copies of the password file, `postmap` on every run. Proof: rerun `changed=0`; test mail from each host
       `status=sent (250 2.0.0 OK ... gsmtp)` via smtp.gmail.com. Route: inline.
-- [ ] T13+ Roles common to both hosts: 29 pve-exporter, 04 packages, 27 backups. one at a time (order agreed with the user), each with per-host values where they differ.
+- [x] T13 `28_node_exporter` (user decision: no Prometheus yet; pve-exporter deferred to a future monitoring
+      LXC on beelink that scrapes both hosts' APIs remotely): Debian `prometheus-node-exporter` +
+      `-collectors` (no recommends) + `nvme-cli`; NVMe timer started when NVMe devices exist (its path
+      condition is only checked at start). Proof: `:9100/metrics` reachable from the controller on both
+      hosts (~4k lines), ZFS metrics on both, SMART on nas HDDs, NVMe health on both (39/20 series),
+      `node_reboot_required` present, rerun `changed=0`. Route: inline.
+- [ ] T14+ Roles common to both hosts: 04 packages, 27 backups. Later feature: monitoring stack + pve-exporter. one at a time (order agreed with the user), each with per-host values where they differ.
 
 ## Progress
 
