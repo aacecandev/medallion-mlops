@@ -54,3 +54,8 @@ base_packages:
   - curl
   - lm-sensors
 extra_packages: [] # per-host additions in host_vars/<host>/main.yml
+
+# 10_zfs_storage: pools/datasets per host in host_vars; 0 keeps PVE's ARC limit.
+zfs_pools: []
+zfs_datasets: []
+zfs_arc_max_bytes: 0

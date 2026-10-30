@@ -1,0 +1,4 @@
+# The zfs module options are read from the initramfs at boot.
+- name: Update initramfs
+  ansible.builtin.command: update-initramfs -u -k all
+  changed_when: true

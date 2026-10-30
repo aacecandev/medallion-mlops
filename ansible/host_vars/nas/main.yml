@@ -1,3 +1,29 @@
 ---
 # 13_ksmtuned: file server without VMs, KSM would only poll for nothing.
 ksmtuned_enabled: false
+
+# 10_zfs_storage: RAIDZ1 over the 4 HDDs (sda is an SMR WD40EFAX: watch SMART).
+zfs_pools:
+  - name: datapool
+    mountpoint: /datapool
+    vdevs:
+      - type: raidz1
+        disks:
+          - /dev/disk/by-id/ata-WDC_WD40EFAX-68JH4N0_WD-WX62D30RD28V
+          - /dev/disk/by-id/ata-ST4000VN000-2AH166_WDH02FKJ
+          - /dev/disk/by-id/ata-TOSHIBA_MD04ACA400_Z5F6KOB1FSAA
+          - /dev/disk/by-id/ata-WDC_WD40EFRX-68WT0N0_WD-WCC4E4SRZPYD
+    pool_properties:
+      ashift: 12
+    filesystem_properties:
+      compression: lz4
+      atime: "off"
+      xattr: sa
+      acltype: posixacl
+      dnodesize: auto
+zfs_datasets:
+  - name: datapool/backups
+    properties:
+      recordsize: 1M # large sequential vzdump archives
+  - name: datapool/data
+zfs_arc_max_bytes: 3221225472 # 3 GiB of 7 GiB RAM

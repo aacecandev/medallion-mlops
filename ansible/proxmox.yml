@@ -33,6 +33,11 @@
         name: 06_configure_users
       tags: [users]
 
+    - name: ZFS storage
+      ansible.builtin.import_role:
+        name: 10_zfs_storage
+      tags: [zfs]
+
     - name: KSM tuning
       ansible.builtin.import_role:
         name: 13_ksmtuned
