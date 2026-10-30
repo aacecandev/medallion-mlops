@@ -55,16 +55,20 @@ Strategy: `ask-on-risk`. Branch `feat/nas-storage` from `origin/main`.
       write test owned by root; rerun `changed=0`. Note: first run failed on the missing exports dir and
       `pvesm add` then failed (nothing added). Route: inline.
 - [ ] T5 Proxmox backup jobs (vzdump) to the NAS storage, with retention (beelink guests only; small).
-- [ ] T6 Workstation backup (user decision: rsync + ZFS snapshots, not vzdump/PBS; data 7.4 TB on NTFS,
+- [x] T6 Workstation backup (user decision: rsync + ZFS snapshots, not vzdump/PBS; data 7.4 TB on NTFS,
       rarely changing): inventory groups `proxmox`, `workstations` (asuspc, local connection),
       `pc_backup_target` (nas); `proxmox.yml` now targets `proxmox` only. `pc-backup.yml` + `40_pc_backup`:
       dedicated ed25519 key on the PC; NAS user `pc-backup` owns `datapool/data/pc` (recordsize 1M), key
       restricted to `rrsync -wo` (write-only, no shell); sanoid daily 7 / weekly 4 / monthly 6; systemd user
       service + timer 01:30 (`Persistent`, `ConditionPathIsMountPoint` so an unmounted disk never syncs an
       empty tree with `--delete`), `rsync -rt --delete` (NTFS: no POSIX owners), NAS host key pinned from
-      `ansible/known_hosts`, linger for logged-out runs. Done: lint passes, dataset created on nas.
-      Pending: real run by the user (auto-mode classifier blocks persistence on the workstation); first
-      full sync (~7.4 TB) starts at the first timer run.
+      `ansible/known_hosts`, linger for logged-out runs. Run by the user (auto-mode classifier blocks
+      persistence on the workstation); first run failed on missing `/etc/sanoid` (`00c91f7` creates it).
+      Proof: timer enabled/active, next 01:30, linger yes; key 0600; NAS `authorized_keys` has
+      `restrict,command="/usr/bin/rrsync -wo ..."`, dataset `pc-backup:pc-backup 750`, sanoid.conf
+      7/4/6, sanoid.timer active. Restriction tests with the key: `id` -> "rrsync error: SSH_ORIGINAL_COMMAND
+      does not run rsync"; PTY refused; reading from the NAS and writing outside the dir fail; dry-run
+      write OK. Pending: first full sync (~7.4 TB, ~20 h at 1 Gbit/s), then first sanoid snapshot.
 
 ## Progress
 
