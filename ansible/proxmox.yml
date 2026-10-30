@@ -53,6 +53,11 @@
         name: 22_mail
       tags: [mail]
 
+    - name: ISO images
+      ansible.builtin.import_role:
+        name: 25_upload_isos
+      tags: [isos]
+
     - name: NFS storage
       ansible.builtin.import_role:
         name: 26_nfs_storage

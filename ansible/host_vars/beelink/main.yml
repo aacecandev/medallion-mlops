@@ -1,4 +1,10 @@
 ---
+# 25_upload_isos: installer for the Packer golden image (ubuntu_image in
+# images/proxmox-golden-image/variables.auto.pkrvars.hcl must match the filename).
+pve_isos:
+  - url: https://releases.ubuntu.com/24.04.3/ubuntu-24.04.3-live-server-amd64.iso
+    checksum: sha256:c3514bf0056180d09376462a7a1b4f213c1d6e8ea67fae5c25099c6fd3d8274b
+
 # 26_nfs_storage: NAS backups dataset as Proxmox storage, backups only.
 pve_nfs_storages:
   - id: nas-backups

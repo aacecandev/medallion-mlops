@@ -14,6 +14,28 @@ admin_user_pve_role: Administrator
 admin_user_ssh_keys:
   - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDKwFgVMjJtsFt0vn0AM9Q10RJkgByxevhJY9kRQyH9U cardno:32_247_877
 
+# 06_configure_users: custom Proxmox roles, kept in sync with this privilege list.
+# PVE 9 dropped VM.Monitor; guest agent reads need VM.GuestAgent.Audit instead.
+pve_custom_roles:
+  - name: Packer # proxmox-iso builder: create, configure, boot and templatize a VM
+    privs:
+      - Datastore.AllocateSpace # VM disk and cloud-init drive
+      - Datastore.Audit # read the installer ISO
+      - SDN.Use # attach the NIC to the bridge
+      - VM.Allocate # create the VM and convert it to a template
+      - VM.Audit
+      - VM.Config.CDROM
+      - VM.Config.CPU
+      - VM.Config.Cloudinit
+      - VM.Config.Disk
+      - VM.Config.HWType
+      - VM.Config.Memory
+      - VM.Config.Network
+      - VM.Config.Options
+      - VM.Console # sendkey for the boot command
+      - VM.GuestAgent.Audit # read guest IPs through the agent
+      - VM.PowerMgmt
+
 # 06_configure_users: Proxmox-only service users, one privilege-separated token each.
 # Secrets land in host_vars/<host>/pve_tokens.sops.yml as pve_token_secrets["<userid>!<token>"].
 pve_service_users:
@@ -21,6 +43,10 @@ pve_service_users:
     comment: OpenTofu/Terraform provider (managed by Ansible)
     role: Administrator # narrow to a custom role later
     token: terraform
+  - userid: packer@pve
+    comment: Packer golden image builds (managed by Ansible)
+    role: Packer
+    token: packer
   - userid: monitoring@pve
     comment: Prometheus pve-exporter (managed by Ansible)
     role: PVEAuditor
@@ -66,6 +92,9 @@ smartd_test_schedule: S/../../7/03|L/../01/./04
 smartd_temp_diff: 4
 smartd_temp_info: 45
 smartd_temp_crit: 55
+
+# 25_upload_isos: installer ISOs per host in host_vars, as {url, checksum}.
+pve_isos: []
 
 # 26_nfs_storage: exports and Proxmox NFS storages per host in host_vars.
 nfs_exports: []
