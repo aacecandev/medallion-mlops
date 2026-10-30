@@ -56,3 +56,13 @@
   register: zfs_arc_live
   changed_when: "'changed' in zfs_arc_live.stdout"
   when: zfs_arc_max_bytes | int > 0
+
+# zed already mails root (aliased to the admin address by 22_mail) on faults.
+# Verbose also reports finished scrubs, so silence is never mistaken for health.
+# Scrubs come from Debian's /etc/cron.d/zfsutils-linux (2nd Sunday, all pools).
+- name: Report finished scrubs by mail
+  ansible.builtin.lineinfile:
+    path: /etc/zfs/zed.d/zed.rc
+    regexp: "^#?ZED_NOTIFY_VERBOSE="
+    line: "ZED_NOTIFY_VERBOSE=1"
+  notify: Restart zed

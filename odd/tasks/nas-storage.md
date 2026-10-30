@@ -36,7 +36,11 @@ Strategy: `ask-on-risk`. Branch `feat/nas-storage` from `origin/main`.
       pool; `zpool status` ONLINE, 10.4T avail, properties inherited, ARC 3221225472, zfs.conf in initramfs,
       full playbook rerun `changed=0` on both. Known: `community.general.zfs` reports `changed` in
       `--check` for `datapool/backups` while real runs report none. Route: inline.
-- [ ] T2 ZFS event mail (`zed`) and scrub schedule.
+- [x] T2 ZFS event mail and scrubs (both hosts, in `10_zfs_storage`): zed already mailed `root` (aliased by
+      `22_mail`) on faults; set `ZED_NOTIFY_VERBOSE=1` so finished scrubs are reported too. Scrubs stay on
+      Debian's `/etc/cron.d/zfsutils-linux` (2nd Sunday, all pools); `zfs-scrub-*` timers left disabled to
+      avoid double scrubs. Proof: rerun `changed=0`; manual scrub of `datapool` and `rpool` (0 errors) ->
+      zed `scrub_finish` -> Postfix `status=sent (250` via smtp.gmail.com on both. Route: inline.
 - [ ] T3 SMART alerts with `smartd` (mail on failures, periodic self-tests).
 - [ ] T4 NFS export on nas + Proxmox storage on beelink.
 - [ ] T5 Proxmox backup jobs (vzdump) to the NAS storage, with retention.
@@ -47,4 +51,4 @@ Strategy: `ask-on-risk`. Branch `feat/nas-storage` from `origin/main`.
 
 ## Next step
 
-T2 (zed mail, scrub), then T3 (smartd).
+T3 (smartd).
