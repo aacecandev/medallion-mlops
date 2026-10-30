@@ -32,7 +32,16 @@ from the reference clone in `temp/proxmox-bootstrap` and fixing each on the way.
 
 ## Delivery
 
-Strategy: `ask-on-risk`. Forecast: well over 400 authored lines across all roles.
+Strategy: `ask-on-risk`; chain strategy (user decision): `feature-branch-chain`.
+Branches were restructured locally after T5 (commits rebased, so hashes in Progress predate the
+chain; content verified identical).
+
+| Slice | Branch | Base | Holds | Size |
+|---|---|---|---|---|
+| Tracker | `feat/ansible-host-config` | `main` | empty tracker commit; draft, no-merge until chain done | 0 |
+| 01 | `feat/ansible-host-config-01-base` | tracker | T1–T4: requirements, `00_init`, `02_date_timezone`, `05_init_sshd` | 245 |
+| 02 | `feat/ansible-host-config-02-users` | 01 | T5: sops vars, `06_configure_users`, service users, API tokens | 241 |
+| 03 | `feat/ansible-host-config-03-services` | 02 | T6+: next roles | in progress |
 
 ## Tasks
 
