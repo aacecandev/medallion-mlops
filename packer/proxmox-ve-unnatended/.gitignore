@@ -1,0 +1,7 @@
+# Installer ISOs (stock and prepared) are large binaries
+*.iso
+
+# Age private keys (DO NOT COMMIT)
+*.agekey
+keys.txt
+build/

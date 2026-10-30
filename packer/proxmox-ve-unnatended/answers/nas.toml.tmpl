@@ -1,0 +1,29 @@
+# Answer file template for nas (Proxmox VE 9, kebab-case keys).
+# Only ${ROOT_PASSWORD_HASHED} and ${MAILTO} are substituted, by
+# scripts/build-iso.sh. Everything else is committed as-is.
+
+[global]
+keyboard = "es"
+country = "es"
+timezone = "Europe/Madrid"
+fqdn = "nas.home.arpa"
+mailto = "${MAILTO}"
+root-password-hashed = "${ROOT_PASSWORD_HASHED}"
+root-ssh-keys = [
+  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDKwFgVMjJtsFt0vn0AM9Q10RJkgByxevhJY9kRQyH9U cardno:32_247_877",
+]
+reboot-on-error = false
+
+[network]
+source = "from-answer"
+cidr = "192.168.1.138/24"
+dns = "192.168.1.1"
+gateway = "192.168.1.1"
+# Pin the NIC by MAC so the right port gets the static IP.
+filter.ID_NET_NAME_MAC = "*6c1ff7a98ec3"
+
+[disk-setup]
+filesystem = "ext4"
+# Only the NVMe system disk is listed. The four HDDs (sdX) are intentionally
+# never selected; their data filesystem is set up after installation.
+disk-list = ["nvme0n1"]

@@ -1,0 +1,58 @@
+name: proxmox-iso
+
+# Checks that the Proxmox VE answer files validate and that the unattended
+# ISOs can be prepared. Uses FAKE secrets (packer/proxmox-ve-unnatended/ci)
+# and uploads no artifacts: a prepared ISO embeds its answer file in plaintext.
+on:
+  pull_request:
+    paths:
+      - packer/proxmox-ve-unnatended/**
+      - .github/workflows/proxmox-iso.yml
+  push:
+    branches: [main]
+    paths:
+      - packer/proxmox-ve-unnatended/**
+      - .github/workflows/proxmox-iso.yml
+  workflow_dispatch: {}
+
+env:
+  PVE_ISO_NAME: proxmox-ve_9.2-1.iso
+  PVE_ISO_URL: https://enterprise.proxmox.com/iso/proxmox-ve_9.2-1.iso
+  PVE_ISO_SHA256: 4e88fe416df9b527624a175f24c9aa07c714d3332afb1ee3dbf3879573ef2c6c
+  CONTAINER_ENGINE: docker
+  AIA_IMAGE: localhost/proxmox-auto-install-assistant:9.0.7
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        host: [beelink, nas]
+    defaults:
+      run:
+        working-directory: packer/proxmox-ve-unnatended
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the auto-install-assistant image
+        run: docker build -t "${AIA_IMAGE}" -f Containerfile .
+
+      - name: Cache the stock ISO
+        id: iso-cache
+        uses: actions/cache@v4
+        with:
+          path: packer/proxmox-ve-unnatended/${{ env.PVE_ISO_NAME }}
+          key: pve-iso-${{ env.PVE_ISO_SHA256 }}
+
+      - name: Download the stock ISO
+        if: steps.iso-cache.outputs.cache-hit != 'true'
+        run: curl -fsSL -o "${PVE_ISO_NAME}" "${PVE_ISO_URL}"
+
+      - name: Verify the stock ISO checksum
+        run: echo "${PVE_ISO_SHA256}  ${PVE_ISO_NAME}" | sha256sum -c -
+
+      - name: Validate the answer file and prepare the ISO (fake secrets)
+        run: scripts/build-iso.sh "${{ matrix.host }}" < ci/secrets.ci.env
