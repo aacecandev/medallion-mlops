@@ -39,15 +39,25 @@ Strategy: `ask-on-risk`. Forecast: well over 400 authored lines across all roles
 - [x] T1 `ansible/requirements.yml` for `ansible.posix` and `community.general`. Route: inline.
 - [x] T2 Base layout + `00_init`: move shared vars to `group_vars/all.yml`, drop `vars_file`/`include_vars`
       and `ansible_ssh_pass`, use facts for CPU vendor. Route: inline.
-- [ ] T3+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
+- [x] T3 `02_date_timezone`: `community.general.timezone`, NTP pool in `/etc/chrony/sources.d/ntp-pool.sources`
+      (Debian layout), reload sources instead of restart; dropped unused offset probe and forced `makestep`.
+      Shared values in `group_vars/all.yml`. Route: inline.
+- [ ] T4+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
 
 ## Progress
 
 - Branch `feat/ansible-host-config` created from `main`.
 - `ansible all -m ping` succeeded on both hosts.
-- T1 committed `9795a00`. T2: `ansible-lint` passed (production profile), `--syntax-check` passed; not yet run against the hosts.
+- T1 committed `9795a00`.
+- T2 committed `1fbbfd5`: no shared vars remained, so no `group_vars/all.yml` yet; `host_vars/all.yml`
+  (plaintext `changeme`) left untracked for the user to delete. `.ansible-lint` skips `role-name` and
+  `var-naming[no-role-prefix]` (numbered roles, shared `global_*` facts). `ansible-lint` passed
+  (production profile), `--syntax-check` passed. `--check` on both hosts: all assertions passed;
+  facts: both `GenuineIntel`, PVE 9; boot mode beelink `efi` (proxmox-boot-tool), nas `efi-grub`.
 - User copied roles 02, 05, 06, 13, 18 into `ansible/roles`; excluded from lint until ported.
+- T3: `ansible-lint` passed; `--check --diff` on both hosts: 2 changes each (remove Debian pool line,
+  add `es.pool.ntp.org` source), timezone already `Europe/Madrid`. Pending: real run (user approval).
 
 ## Next step
 
-T1 commit, then T2.
+Real run of `02_date_timezone` once approved, then port `05_init_sshd`.

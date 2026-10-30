@@ -3,8 +3,7 @@ skip_list:
   - role-name # roles are numbered to show run order (00_init, 02_...)
   - var-naming[no-role-prefix] # global_* facts from 00_init are shared by later roles
 exclude_paths:
-  - roles/02_date_timezone # not ported yet
-  - roles/05_init_sshd
+  - roles/05_init_sshd # not ported yet
   - roles/06_configure_users
   - roles/13_ksmtuned
   - roles/18_fail2ban

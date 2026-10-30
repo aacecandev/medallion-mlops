@@ -4,3 +4,7 @@
     - name: Init
       ansible.builtin.include_role:
         name: 00_init
+
+    - name: Date and timezone
+      ansible.builtin.include_role:
+        name: 02_date_timezone
