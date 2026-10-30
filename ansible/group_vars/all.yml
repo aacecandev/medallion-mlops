@@ -37,3 +37,7 @@ fail2ban_maxretry: 5
 fail2ban_ignoreip: # never banned; recover from a self-ban on the console with: fail2ban-client unban --all
   - 127.0.0.1/8
   - ::1
+
+# 22_mail: all host mail relays through Google Workspace.
+# admin_email, mail_relay_user and mail_relay_password live in all.sops.yml.
+mail_relayhost: "[smtp.gmail.com]:587"

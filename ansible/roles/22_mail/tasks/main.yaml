@@ -1,0 +1,50 @@
+# Postfix (installed by PVE) relays all host mail - Proxmox notifications,
+# unattended-upgrades, cron, zed, smartd - through an authenticated SMTP relay.
+# Only the relay keys are set; the rest of Debian's main.cf stays as installed.
+- name: Install SASL modules for SMTP authentication
+  ansible.builtin.apt:
+    name: libsasl2-modules
+    state: present
+
+- name: Write relay credentials
+  ansible.builtin.copy:
+    dest: /etc/postfix/sasl_passwd
+    content: "{{ mail_relayhost }} {{ mail_relay_user }}:{{ mail_relay_password | replace(' ', '') }}\n"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  notify:
+    - Build relay credentials map
+    - Reload postfix
+
+- name: Read current Postfix relay settings
+  ansible.builtin.command: postconf -h {{ item.key }}
+  loop: "{{ mail_postfix_settings | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  register: mail_postconf_current
+  changed_when: false
+  check_mode: false
+
+- name: Set Postfix relay settings
+  ansible.builtin.command: postconf -e "{{ item.item.key }}={{ item.item.value }}"
+  loop: "{{ mail_postconf_current.results }}"
+  loop_control:
+    label: "{{ item.item.key }}"
+  when: item.stdout != item.item.value | string
+  changed_when: true
+  notify: Reload postfix
+
+- name: Forward root mail to the admin address
+  ansible.builtin.lineinfile:
+    path: /etc/aliases
+    regexp: "^root:"
+    line: "root: {{ admin_email }}"
+  notify: Rebuild aliases
+
+- name: Ensure postfix is running
+  ansible.builtin.systemd_service:
+    name: postfix
+    state: started
+    enabled: true

@@ -38,6 +38,11 @@
         name: 18_fail2ban
       tags: [fail2ban]
 
+    - name: Mail relay
+      ansible.builtin.import_role:
+        name: 22_mail
+      tags: [mail]
+
     - name: Unattended security updates
       ansible.builtin.import_role:
         name: 99_update_reboot

@@ -105,7 +105,14 @@ chain; content verified identical).
       root cron `apt full-upgrade -y` and auto reboot. Proof: dry run allows only Debian-Security; nas then
       beelink upgraded (191 pending) and rebooted to pve-manager 9.2.24, kernel 7.0.14-26-pve; no failed units,
       services active, 0 upgradable, web UI 200, beelink `zpool status -x` healthy, full rerun `changed=0`. Route: inline.
-- [ ] T12+ Roles common to both hosts: 22 mail, 29 pve-exporter, 04 packages, 27 backups. one at a time (order agreed with the user), each with per-host values where they differ.
+- [x] T12 `22_mail`: Postfix relays all host mail through Google Workspace (`[smtp.gmail.com]:587`, STARTTLS
+      required, SASL with an app password); only relay keys set via `postconf -e` (rest of Debian main.cf
+      untouched); `sasl_passwd` 0600 + `postmap` on change, no plaintext backups; `root` aliased to the admin
+      address; unattended-upgrades mails only on error. Admin address, relay user and password in
+      `group_vars/all.sops.yml` (public repo). Clone issues avoided: full main.cf overwrite, `backup: true`
+      copies of the password file, `postmap` on every run. Proof: rerun `changed=0`; test mail from each host
+      `status=sent (250 2.0.0 OK ... gsmtp)` via smtp.gmail.com. Route: inline.
+- [ ] T13+ Roles common to both hosts: 29 pve-exporter, 04 packages, 27 backups. one at a time (order agreed with the user), each with per-host values where they differ.
 
 ## Progress
 
