@@ -1,0 +1,59 @@
+# NFS server side for hosts with nfs_exports, Proxmox NFS storage for hosts
+# with pve_nfs_storages. Server tasks come first, so in one play the export
+# exists before a client adds the storage.
+- name: NFS server
+  when: nfs_exports | length > 0
+  block:
+    - name: Install NFS server
+      ansible.builtin.apt:
+        name: nfs-kernel-server
+        state: present
+
+    # Read by exportfs, but not created by the Debian package.
+    - name: Create exports directory
+      ansible.builtin.file:
+        path: /etc/exports.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Configure NFS exports
+      ansible.builtin.template:
+        src: ansible.exports.j2
+        dest: /etc/exports.d/ansible.exports
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload NFS exports
+
+    - name: Ensure NFS server is running
+      ansible.builtin.systemd_service:
+        name: nfs-server
+        state: started
+        enabled: true
+      # In check mode on a fresh host the package (and its unit) is not installed yet.
+      ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Apply NFS exports now
+  ansible.builtin.meta: flush_handlers
+
+- name: List Proxmox storages
+  ansible.builtin.command: pvesh get /storage --output-format json
+  register: nfs_pve_storages
+  changed_when: false
+  check_mode: false
+  when: pve_nfs_storages | length > 0
+
+- name: Add Proxmox NFS storages
+  ansible.builtin.command: >-
+    pvesm add nfs {{ item.id }}
+    --server {{ item.server }}
+    --export {{ item.export }}
+    --content {{ item.content }}
+    --options {{ item.options | default('vers=4.2') }}
+  loop: "{{ pve_nfs_storages }}"
+  loop_control:
+    label: "{{ item.id }}"
+  when: item.id not in (nfs_pve_storages.stdout | from_json | map(attribute='storage'))
+  changed_when: true

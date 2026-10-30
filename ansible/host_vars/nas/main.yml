@@ -27,3 +27,11 @@ zfs_datasets:
       recordsize: 1M # large sequential vzdump archives
   - name: datapool/data
 zfs_arc_max_bytes: 3221225472 # 3 GiB of 7 GiB RAM
+
+# 26_nfs_storage: backups dataset for beelink only. no_root_squash because
+# Proxmox writes backups as root; limited to this export and this client.
+nfs_exports:
+  - path: /datapool/backups
+    clients:
+      - host: 192.168.1.200
+        options: rw,sync,no_subtree_check,no_root_squash

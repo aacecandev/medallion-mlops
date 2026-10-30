@@ -66,3 +66,7 @@ smartd_test_schedule: S/../../7/03|L/../01/./04
 smartd_temp_diff: 4
 smartd_temp_info: 45
 smartd_temp_crit: 55
+
+# 26_nfs_storage: exports and Proxmox NFS storages per host in host_vars.
+nfs_exports: []
+pve_nfs_storages: []

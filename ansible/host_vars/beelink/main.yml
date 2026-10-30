@@ -1,0 +1,7 @@
+---
+# 26_nfs_storage: NAS backups dataset as Proxmox storage, backups only.
+pve_nfs_storages:
+  - id: nas-backups
+    server: 192.168.1.138
+    export: /datapool/backups
+    content: backup

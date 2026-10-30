@@ -47,7 +47,13 @@ Strategy: `ask-on-risk`. Branch `feat/nas-storage` from `origin/main`.
       failures but scheduled no self-tests and watched no temperature. Proof: monitors beelink 2 NVMe, nas
       4 SATA + 1 NVMe; `showtests` lists S and L tests per device; one-off `-M test` mail per host
       `status=sent (250`; rerun `changed=0`. Route: inline.
-- [ ] T4 NFS export on nas + Proxmox storage on beelink.
+- [x] T4 `26_nfs_storage` (user-approved design): nas exports only `/datapool/backups` to 192.168.1.200
+      (`rw,sync,no_subtree_check,no_root_squash`, root needed by vzdump) from `/etc/exports.d/ansible.exports`
+      (dir created by the role; the package does not), `exportfs -ra` on change, flushed before client tasks;
+      beelink adds Proxmox storage `nas-backups` (NFS 4.2, content `backup` only) when missing. Proof:
+      `exportfs -v` shows one client; beelink `pvesm status` active 10.4T, `findmnt` nfs4 from the NAS, root
+      write test owned by root; rerun `changed=0`. Note: first run failed on the missing exports dir and
+      `pvesm add` then failed (nothing added). Route: inline.
 - [ ] T5 Proxmox backup jobs (vzdump) to the NAS storage, with retention.
 
 ## Progress
@@ -56,4 +62,4 @@ Strategy: `ask-on-risk`. Branch `feat/nas-storage` from `origin/main`.
 
 ## Next step
 
-T4 (NFS export on nas, Proxmox storage on beelink).
+T5 (vzdump backup job to `nas-backups` with retention).

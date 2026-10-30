@@ -1,0 +1,4 @@
+# Fails on a malformed export, leaving the previous exports active.
+- name: Reload NFS exports
+  ansible.builtin.command: exportfs -ra
+  changed_when: true

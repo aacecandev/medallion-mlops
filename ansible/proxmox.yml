@@ -53,6 +53,11 @@
         name: 22_mail
       tags: [mail]
 
+    - name: NFS storage
+      ansible.builtin.import_role:
+        name: 26_nfs_storage
+      tags: [nfs]
+
     - name: Node exporter
       ansible.builtin.import_role:
         name: 28_node_exporter
