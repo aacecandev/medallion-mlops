@@ -1,0 +1,16 @@
+- name: Configure smartd
+  ansible.builtin.template:
+    src: smartd.conf.j2
+    dest: /etc/smartd.conf
+    owner: root
+    group: root
+    mode: "0644"
+    # Parses the file and lists the scheduled tests; fails on a bad directive.
+    validate: smartd -q showtests -c %s
+  notify: Restart smartd
+
+- name: Ensure smartd is running
+  ansible.builtin.systemd_service:
+    name: smartmontools
+    state: started
+    enabled: true

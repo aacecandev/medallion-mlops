@@ -1,0 +1,13 @@
+# Managed by Ansible (40_pc_backup).
+[{{ pc_backup_dataset }}]
+        use_template = pc_backup
+
+[template_pc_backup]
+        frequently = 0
+        hourly = 0
+        daily = {{ pc_backup_snapshots.daily }}
+        weekly = {{ pc_backup_snapshots.weekly }}
+        monthly = {{ pc_backup_snapshots.monthly }}
+        yearly = 0
+        autosnap = yes
+        autoprune = yes

@@ -1,0 +1,24 @@
+---
+# 26_nfs_storage: NAS backups dataset as Proxmox storage, backups only.
+pve_nfs_storages:
+  - id: nas-backups
+    server: 192.168.1.138
+    export: /datapool/backups
+    content: backup
+
+# 27_backup_jobs: every guest nightly to the NAS. legacy-sendmail mails only on
+# failure, per job, to root (aliased by 22_mail) without changing the
+# notification matcher that routes all other Proxmox notifications.
+pve_backup_jobs:
+  - id: nightly-guests
+    options:
+      schedule: "02:00"
+      storage: nas-backups
+      all: "1"
+      mode: snapshot
+      compress: zstd
+      prune-backups: keep-daily=7,keep-monthly=6,keep-weekly=4 # sorted keys, as compared
+      notification-mode: legacy-sendmail
+      mailnotification: failure
+      mailto: root
+      comment: Managed by Ansible (27_backup_jobs)

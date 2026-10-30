@@ -1,0 +1,20 @@
+# Managed by Ansible (40_pc_backup).
+[Unit]
+Description=Back up {{ pc_backup_source }} to {{ pc_backup_target_host }}:{{ pc_backup_dataset }}
+Wants=network-online.target
+After=network-online.target
+# Never sync an empty mount point (disk not attached) and delete the backup.
+ConditionPathIsMountPoint={{ pc_backup_source }}
+
+[Service]
+Type=oneshot
+Nice=10
+IOSchedulingClass=idle
+# Paths are relative to the rrsync root on the NAS. NTFS has no POSIX owners,
+# so only times and content are kept (-rt, not -a).
+ExecStart=/usr/bin/rsync -rt --delete --partial --info=stats2 \
+{% for pattern in pc_backup_excludes %}
+  --exclude={{ pattern | quote }} \
+{% endfor %}
+  -e "ssh -i {{ pc_backup_key_path }} -o IdentitiesOnly=yes -o UserKnownHostsFile={{ pc_backup_known_hosts }} -o StrictHostKeyChecking=yes -o BatchMode=yes" \
+  {{ pc_backup_source }}/ {{ pc_backup_user }}@{{ hostvars[pc_backup_target_host].ansible_host }}:/

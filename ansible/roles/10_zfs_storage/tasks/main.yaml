@@ -1,0 +1,68 @@
+# ZFS pools and datasets for hosts that define zfs_pools (host_vars).
+# A missing pool is created; an existing one is left as is. Disks carrying
+# labels from an old pool make zpool refuse; rerun with -e zfs_pool_force=true
+# only after confirming those disks may be wiped.
+- name: List existing ZFS pools
+  ansible.builtin.command: zpool list -H -o name
+  register: zfs_existing_pools
+  changed_when: false
+  check_mode: false
+
+# Only for missing pools: on an existing pool the module compares by-id paths
+# with zpool's short vdev names, misses the match and tries `zpool add` of the
+# same disks.
+- name: Create ZFS pools
+  community.general.zpool:
+    name: "{{ item.name }}"
+    vdevs: "{{ item.vdevs }}"
+    pool_properties: "{{ item.pool_properties | default({}) }}"
+    filesystem_properties: "{{ item.filesystem_properties | default({}) }}"
+    mountpoint: "{{ item.mountpoint | default(omit) }}"
+    force: "{{ zfs_pool_force | default(false) | bool }}"
+  loop: "{{ zfs_pools }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.name not in zfs_existing_pools.stdout_lines
+
+- name: Create ZFS datasets
+  community.general.zfs:
+    name: "{{ item.name }}"
+    state: present
+    extra_zfs_properties: "{{ item.properties | default({}) }}"
+  loop: "{{ zfs_datasets }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+# PVE's installer caps the ARC at 10% of RAM; a file server wants more.
+- name: Set ZFS ARC limit
+  ansible.builtin.copy:
+    dest: /etc/modprobe.d/zfs.conf
+    content: |
+      # Managed by Ansible (10_zfs_storage).
+      options zfs zfs_arc_max={{ zfs_arc_max_bytes }}
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Update initramfs
+  when: zfs_arc_max_bytes | int > 0
+
+- name: Apply ZFS ARC limit now
+  ansible.builtin.shell: |
+    set -eu
+    f=/sys/module/zfs/parameters/zfs_arc_max
+    [ "$(cat "$f")" = "{{ zfs_arc_max_bytes }}" ] && exit 0
+    echo "{{ zfs_arc_max_bytes }}" > "$f"
+    echo changed
+  register: zfs_arc_live
+  changed_when: "'changed' in zfs_arc_live.stdout"
+  when: zfs_arc_max_bytes | int > 0
+
+# zed already mails root (aliased to the admin address by 22_mail) on faults.
+# Verbose also reports finished scrubs, so silence is never mistaken for health.
+# Scrubs come from Debian's /etc/cron.d/zfsutils-linux (2nd Sunday, all pools).
+- name: Report finished scrubs by mail
+  ansible.builtin.lineinfile:
+    path: /etc/zfs/zed.d/zed.rc
+    regexp: "^#?ZED_NOTIFY_VERBOSE="
+    line: "ZED_NOTIFY_VERBOSE=1"
+  notify: Restart zed

@@ -1,7 +1,7 @@
 # Run one role with --tags, e.g. ansible-playbook proxmox.yml --tags sshd
 # (init always runs, later roles depend on its facts).
 - name: Prepare proxmox
-  hosts: all
+  hosts: proxmox
   tasks:
     - name: Init
       ansible.builtin.import_role:
@@ -33,6 +33,11 @@
         name: 06_configure_users
       tags: [users]
 
+    - name: ZFS storage
+      ansible.builtin.import_role:
+        name: 10_zfs_storage
+      tags: [zfs]
+
     - name: KSM tuning
       ansible.builtin.import_role:
         name: 13_ksmtuned
@@ -48,10 +53,25 @@
         name: 22_mail
       tags: [mail]
 
+    - name: NFS storage
+      ansible.builtin.import_role:
+        name: 26_nfs_storage
+      tags: [nfs]
+
+    - name: Backup jobs
+      ansible.builtin.import_role:
+        name: 27_backup_jobs
+      tags: [backups]
+
     - name: Node exporter
       ansible.builtin.import_role:
         name: 28_node_exporter
       tags: [node_exporter]
+
+    - name: SMART monitoring
+      ansible.builtin.import_role:
+        name: 29_smartd
+      tags: [smartd]
 
     - name: Unattended security updates
       ansible.builtin.import_role:
@@ -61,7 +81,7 @@
 # Opt-in only: ansible-playbook proxmox.yml --tags upgrade [--limit <host>]
 # Full upgrade plus reboot if needed, one host at a time.
 - name: Upgrade packages
-  hosts: all
+  hosts: proxmox
   serial: 1
   tasks:
     - name: Upgrade and reboot
