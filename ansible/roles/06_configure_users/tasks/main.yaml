@@ -1,0 +1,48 @@
+# Debian's default sudoers grants the sudo group full access (with password).
+- name: Install sudo
+  ansible.builtin.apt:
+    name: sudo
+    state: present
+
+- name: Create admin user
+  ansible.builtin.user:
+    name: "{{ admin_user }}"
+    password: "{{ admin_user_password_hash }}"
+    shell: /bin/bash
+    groups: sudo
+    append: true
+    create_home: true
+
+- name: Authorize admin user SSH keys
+  ansible.posix.authorized_key:
+    user: "{{ admin_user }}"
+    path: /home/{{ admin_user }}/.ssh/authorized_keys # explicit so check mode works before the user exists
+    key: "{{ admin_user_ssh_keys | join('\n') }}"
+    exclusive: true
+
+- name: List Proxmox users
+  ansible.builtin.command: pveum user list --output-format json
+  register: pveum_users
+  changed_when: false
+  check_mode: false
+
+- name: Create Proxmox user
+  ansible.builtin.command: pveum user add {{ admin_user }}@pam --comment "Admin user (managed by Ansible)"
+  when: admin_user ~ '@pam' not in (pveum_users.stdout | from_json | map(attribute='userid'))
+  changed_when: true
+
+- name: List Proxmox ACLs
+  ansible.builtin.command: pveum acl list --output-format json
+  register: pveum_acls
+  changed_when: false
+  check_mode: false
+
+- name: Grant Proxmox role on /
+  ansible.builtin.command: pveum acl modify / --users {{ admin_user }}@pam --roles {{ admin_user_pve_role }}
+  when: >-
+    pveum_acls.stdout | from_json
+    | selectattr('path', 'eq', '/')
+    | selectattr('ugid', 'eq', admin_user ~ '@pam')
+    | selectattr('roleid', 'eq', admin_user_pve_role)
+    | list | length == 0
+  changed_when: true

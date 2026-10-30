@@ -49,7 +49,13 @@ Strategy: `ask-on-risk`. Forecast: well over 400 authored lines across all roles
 - [ ] T5 `06_configure_users`: admin user `alejandro` (sudo, YubiKey key, PAM realm `Administrator`),
       password hash in sops-encrypted `group_vars/all.sops.yml`; Proxmox API tokens scope to agree.
       Done so far: `community.sops` in requirements, `vars_plugins_enabled` in `ansible.cfg`, `.sops.yaml`
-      rule for `ansible/(group|host)_vars/*.sops.y(a)ml`; probe file decrypted via `ansible-inventory`.
+      rule for `ansible/(group|host)_vars/*.sops.y(a)ml`; probe file decrypted via `ansible-inventory`
+      (`aeb20be`). User created `group_vars/all.sops.yml` (yescrypt hash). Role rewritten: install `sudo`
+      (absent on PVE; Debian sudoers already grants `%sudo` with password), user + hash, exclusive
+      `authorized_key` (YubiKey), `pveum` user + `Administrator` ACL on `/` via JSON-checked idempotency.
+      Dropped root password change (set at install) and NOPASSWD sudo. `ansible-lint` passed;
+      `--check --diff` passed both hosts (3 changes). Real run blocked by the auto-mode classifier
+      (admin account creation = permission grant): pending, user to run.
 - [ ] T6+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
 
 ## Progress
