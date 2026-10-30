@@ -1,22 +1,29 @@
+# Run one role with --tags, e.g. ansible-playbook proxmox.yml --tags sshd
+# (init always runs, later roles depend on its facts).
 - name: Prepare proxmox
   hosts: all
   tasks:
     - name: Init
-      ansible.builtin.include_role:
+      ansible.builtin.import_role:
         name: 00_init
+      tags: [always]
 
     - name: Date and timezone
-      ansible.builtin.include_role:
+      ansible.builtin.import_role:
         name: 02_date_timezone
+      tags: [timezone]
 
     - name: SSH server
-      ansible.builtin.include_role:
+      ansible.builtin.import_role:
         name: 05_init_sshd
+      tags: [sshd]
 
     - name: Users
-      ansible.builtin.include_role:
+      ansible.builtin.import_role:
         name: 06_configure_users
+      tags: [users]
 
     - name: KSM tuning
-      ansible.builtin.include_role:
+      ansible.builtin.import_role:
         name: 13_ksmtuned
+      tags: [ksmtuned]

@@ -79,7 +79,13 @@ chain; content verified identical).
 - [x] T6 `13_ksmtuned`: per-host `ksmtuned_enabled` (beelink on, nas off: no VMs), optional
       `ksmtuned_settings` overrides; stock config left alone when empty. Fixed clone bug ("enable" task set
       `enabled: false`). Moved per-host vars to `host_vars/<host>/main.yml`. Route: inline.
-- [ ] T7+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
+- [x] T7 Hardening of the Ansible setup (user-approved items 1-4): host keys pinned in `ansible/known_hosts`
+      (fingerprints match each host's own `ssh_host_ed25519_key.pub`), `StrictHostKeyChecking=yes`,
+      `IdentitiesOnly=yes`, dropped `host_key_checking = False` and `allow_world_readable_tmpfiles`;
+      `temp/` gitignored; roles imported with tags (`always`, `timezone`, `sshd`, `users`, `ksmtuned`).
+      Proof: empty known_hosts refused; only the YubiKey key offered; full run `changed=0`. Route: inline.
+- [ ] T8 `18_fail2ban`.
+- [ ] T9+ Port remaining roles one at a time (order agreed with the user), each with per-host values where they differ.
 
 ## Progress
 
