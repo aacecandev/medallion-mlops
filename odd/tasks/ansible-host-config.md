@@ -99,7 +99,13 @@ chain; content verified identical).
       `proxmox.sources` with `pve-no-subscription` (Proxmox keyring); apt cache refreshed on change. Skipped
       the clone's nag-screen patch (fragile across widget-toolkit updates). Proof: `apt-get update` 0 errors on
       both hosts (was 401 from enterprise repos), rerun `changed=0`; 191 upgrades pending (not applied). Route: inline.
-- [ ] T11+ Roles common to both hosts (user scope). one at a time (order agreed with the user), each with per-host values where they differ.
+- [x] T11 `99_update_reboot` (user-approved policy): unattended Debian security updates only (`#clear` +
+      `Origins-Pattern` trixie-security, no automatic reboot); Proxmox packages only via the opt-in play
+      `--tags upgrade` (`serial: 1`, `apt dist`, reboot only if `/var/run/reboot-required`). Skipped clone's
+      root cron `apt full-upgrade -y` and auto reboot. Proof: dry run allows only Debian-Security; nas then
+      beelink upgraded (191 pending) and rebooted to pve-manager 9.2.24, kernel 7.0.14-26-pve; no failed units,
+      services active, 0 upgradable, web UI 200, beelink `zpool status -x` healthy, full rerun `changed=0`. Route: inline.
+- [ ] T12+ Roles common to both hosts: 22 mail, 29 pve-exporter, 04 packages, 27 backups. one at a time (order agreed with the user), each with per-host values where they differ.
 
 ## Progress
 

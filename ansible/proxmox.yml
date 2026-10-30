@@ -37,3 +37,20 @@
       ansible.builtin.import_role:
         name: 18_fail2ban
       tags: [fail2ban]
+
+    - name: Unattended security updates
+      ansible.builtin.import_role:
+        name: 99_update_reboot
+      tags: [updates]
+
+# Opt-in only: ansible-playbook proxmox.yml --tags upgrade [--limit <host>]
+# Full upgrade plus reboot if needed, one host at a time.
+- name: Upgrade packages
+  hosts: all
+  serial: 1
+  tasks:
+    - name: Upgrade and reboot
+      ansible.builtin.import_role:
+        name: 99_update_reboot
+        tasks_from: upgrade.yaml
+      tags: [never, upgrade]
